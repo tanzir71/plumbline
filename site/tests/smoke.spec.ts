@@ -131,6 +131,63 @@ test.describe("structure", () => {
   });
 });
 
+const running = (page: import("@playwright/test").Page) =>
+  page.evaluate(() =>
+    document.getAnimations().map((a) => {
+      const effect = a.effect as KeyframeEffect;
+      return {
+        name: (a as CSSAnimation).animationName ?? "",
+        state: a.playState,
+        props: [...new Set(effect.getKeyframes().flatMap((k) => Object.keys(k)))].filter(
+          (p) => !["offset", "computedOffset", "easing", "composite"].includes(p),
+        ),
+      };
+    }),
+  );
+
+test.describe("motion", () => {
+  test("the glows and all four diagrams animate", async ({ page }) => {
+    await page.goto(HOME);
+    const names = new Set((await running(page)).map((a) => a.name));
+    for (const name of ["glow-drift-a", "glow-drift-b", "edge-pulse", "rail-run", "leader-run", "rail-marker", "egress-drop"]) {
+      expect(names, name).toContain(name);
+    }
+  });
+
+  test("animates only cheap properties, so it cannot shift the layout", async ({ page }) => {
+    await page.goto(HOME);
+    const allowed = new Set(["transform", "transformOrigin", "opacity", "strokeDashoffset"]);
+    for (const a of await running(page)) {
+      if (!a.name) continue;
+      for (const prop of a.props) expect(allowed, `${a.name}: ${prop}`).toContain(prop);
+    }
+  });
+
+  test("the pause control stops motion, by keyboard", async ({ page }) => {
+    await page.goto(HOME);
+    const toggle = page.getByRole("checkbox", { name: "Pause motion" });
+    await toggle.focus();
+    await page.keyboard.press("Space");
+    await expect(page.locator(".motion-toggle")).toContainText("Play motion");
+    await expect.poll(async () => (await running(page)).filter((a) => a.name.includes("glow") && a.state === "running").length).toBe(0);
+    await page.keyboard.press("Space");
+    await expect.poll(async () => (await running(page)).filter((a) => a.name.includes("glow") && a.state === "running").length).toBeGreaterThan(0);
+  });
+
+  test.describe("with reduced motion", () => {
+    test.use({ contextOptions: { reducedMotion: "reduce" } });
+
+    test("nothing animates, every edge is visible and the control is hidden", async ({ page }) => {
+      await page.goto(HOME);
+      expect((await running(page)).filter((a) => a.name)).toEqual([]);
+      await expect(page.locator(".motion-toggle")).toBeHidden();
+      for (const edge of await page.locator(".edge-new").all()) {
+        expect(await edge.evaluate((el) => getComputedStyle(el).strokeDasharray)).toBe("none");
+      }
+    });
+  });
+});
+
 test.describe("interactions", () => {
   test("copy button copies and announces", async ({ page }) => {
     await page.goto(HOME);

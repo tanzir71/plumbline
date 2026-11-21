@@ -1,0 +1,272 @@
+/*
+  Subtle motion for the background glows and the diagrams. CSS only.
+  Everything lives behind prefers-reduced-motion, and the footer has a pause control.
+  Glows move only by opacity and transform, so they stay behind their opaque element.
+*/
+
+.edge-pulse {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Background glows: a slow drift, out of step so the halo never visibly loops. */
+  .shot-wrap::before,
+  .shot-wrap::after,
+  .box-wrap::before,
+  .box-wrap::after {
+    will-change: transform, opacity;
+  }
+  .shot-wrap::before {
+    animation: glow-drift-a 17s ease-in-out infinite alternate;
+  }
+  .shot-wrap::after {
+    animation: glow-drift-b 23s ease-in-out infinite alternate;
+  }
+  .box-wrap::before {
+    animation: glow-drift-b 19s ease-in-out infinite alternate;
+  }
+  .box-wrap::after {
+    animation: glow-drift-a 26s ease-in-out infinite alternate;
+  }
+
+  @keyframes glow-drift-a {
+    from {
+      opacity: 0.68;
+      transform: translate3d(-10px, 8px, 0) scale(0.985);
+    }
+    to {
+      opacity: 1;
+      transform: translate3d(10px, -8px, 0) scale(1.015);
+    }
+  }
+  @keyframes glow-drift-b {
+    from {
+      opacity: 1;
+      transform: translate3d(14px, 2px, 0);
+    }
+    to {
+      opacity: 0.62;
+      transform: translate3d(-14px, -6px, 0);
+    }
+  }
+
+  /* The new dependency edge draws in, then a short pulse travels along it. */
+  .edge-new {
+    stroke-dasharray: 1;
+    animation: edge-draw 0.9s 0.35s cubic-bezier(0.4, 0, 0.2, 1) both;
+  }
+  .edge-head {
+    animation: edge-head 0.25s 1.2s ease-out both;
+  }
+  .edge-pulse {
+    stroke-dasharray: 0.12 0.88;
+    stroke-linecap: round;
+    animation: edge-pulse 5.2s 1.7s ease-in-out infinite;
+  }
+  .edge-label {
+    animation: edge-head 0.3s 1.15s ease-out both;
+  }
+
+  @keyframes edge-draw {
+    from {
+      stroke-dashoffset: 1;
+    }
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+  @keyframes edge-head {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes edge-pulse {
+    0% {
+      stroke-dashoffset: 0.12;
+      opacity: 0;
+    }
+    6% {
+      opacity: 0.9;
+    }
+    30% {
+      opacity: 0.9;
+    }
+    36%,
+    100% {
+      stroke-dashoffset: -1;
+      opacity: 0;
+    }
+  }
+
+  /* Below the fold, the edge draws as the drawing scrolls into view. */
+  @supports (animation-timeline: view()) {
+    .drawing {
+      view-timeline: --gap-drawing block;
+    }
+    .drawing .edge-new {
+      animation: edge-draw linear both;
+      animation-timeline: --gap-drawing;
+      animation-range: entry 35% cover 45%;
+    }
+    .drawing .edge-head,
+    .drawing .edge-label {
+      animation: edge-head linear both;
+      animation-timeline: --gap-drawing;
+      animation-range: cover 38% cover 46%;
+    }
+  }
+
+  /* Pipeline: a signal runs along the rail and down each leader, one pass at a time. */
+  .pipeline > li {
+    --step: 0;
+  }
+  .pipeline > li:nth-child(2) {
+    --step: 1;
+  }
+  .pipeline > li:nth-child(3) {
+    --step: 2;
+  }
+  .pipeline > li:nth-child(4) {
+    --step: 3;
+  }
+  .pipeline .marker {
+    animation: rail-marker 9s ease-in-out infinite;
+    animation-delay: calc(var(--step) * 1.35s);
+  }
+  .pipeline .line,
+  .pipeline .leader {
+    position: relative;
+  }
+  .pipeline .line::after,
+  .pipeline .leader::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: var(--accent-plumb);
+    opacity: 0.8;
+  }
+  .pipeline .line::after {
+    transform: scaleX(0);
+    animation: rail-run 9s ease-in-out infinite;
+    animation-delay: calc(var(--step) * 1.35s + 0.2s);
+  }
+  .pipeline .leader::after {
+    transform: scaleY(0);
+    animation: leader-run 9s ease-in-out infinite;
+    animation-delay: calc(var(--step) * 1.35s);
+  }
+
+  @keyframes rail-marker {
+    0%,
+    12%,
+    100% {
+      transform: scale(1);
+    }
+    5% {
+      transform: scale(1.3);
+    }
+  }
+  @keyframes rail-run {
+    0% {
+      transform: scaleX(0);
+      transform-origin: left;
+    }
+    13% {
+      transform: scaleX(1);
+      transform-origin: left;
+    }
+    13.01% {
+      transform: scaleX(1);
+      transform-origin: right;
+    }
+    27%,
+    100% {
+      transform: scaleX(0);
+      transform-origin: right;
+    }
+  }
+  @keyframes leader-run {
+    0% {
+      transform: scaleY(0);
+      transform-origin: top;
+    }
+    8% {
+      transform: scaleY(1);
+      transform-origin: top;
+    }
+    8.01% {
+      transform: scaleY(1);
+      transform-origin: bottom;
+    }
+    20%,
+    100% {
+      transform: scaleY(0);
+      transform-origin: bottom;
+    }
+  }
+
+  /* Data path: one small dot leaves through the only egress. */
+  .path .egress i {
+    position: relative;
+  }
+  .path .egress i::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -1px;
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: var(--accent-plumb);
+    animation: egress-drop 3.8s ease-in-out infinite;
+  }
+  .path .node.end > i {
+    animation: egress-arrive 3.8s ease-in-out infinite;
+  }
+
+  @keyframes egress-drop {
+    0% {
+      opacity: 0;
+      transform: translateY(-2px);
+    }
+    10% {
+      opacity: 1;
+    }
+    52% {
+      opacity: 1;
+      transform: translateY(27px);
+    }
+    60%,
+    100% {
+      opacity: 0;
+      transform: translateY(29px);
+    }
+  }
+  @keyframes egress-arrive {
+    0%,
+    54%,
+    82%,
+    100% {
+      transform: scale(1);
+    }
+    64% {
+      transform: scale(1.3);
+    }
+  }
+}
+
+/* The footer's pause control. A plain checkbox, so it needs no JavaScript. */
+html:has(#pause-motion:checked) *,
+html:has(#pause-motion:checked) *::before,
+html:has(#pause-motion:checked) *::after {
+  animation-play-state: paused !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motion-toggle {
+    display: none !important;
+  }
+}

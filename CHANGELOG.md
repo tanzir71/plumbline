@@ -37,4 +37,4 @@ The first release of Plumbline: an open-source code reviewer that checks the str
 - **M3, CLI and MCP:** `init`, `scope`, `graph`, `check`, `prove`, `report` and `mcp`, with `--json` output
 - **M4, GitHub Action:** one updated PR comment, artifacts, SARIF upload, merge gate and lane label, with the PR treated as untrusted
 - **M5, GitLab CI:** one updated MR note, Code Quality report, merge gate and lane label, including self-managed GitLab
-- **M6, site:** landing page, docs, changelog and 404 on GitHub Pages, with link, pricing, design-rule, browser and Lighthouse checks
+- **M6, site:** landing page, docs, changelog and 404 on GitHub Pages, with subtle CSS motion on the glows and diagrams, and link, pricing, design-rule, browser and Lighthouse checks

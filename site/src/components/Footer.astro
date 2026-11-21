@@ -43,7 +43,14 @@ const columns: [string, [string, string][]][] = [
     </div>
     <div class="bottom">
       <p>© 2026 Plumbline · MIT License · Built by <a href="https://tanziro.com">tanziro.com</a></p>
-      <p>v1.0</p>
+      <div class="bottom-right">
+        <label class="motion-toggle">
+          <input id="pause-motion" class="sr-only" type="checkbox" aria-label="Pause motion" />
+          <span class="to-pause" aria-hidden="true">Pause motion</span>
+          <span class="to-play" aria-hidden="true">Play motion</span>
+        </label>
+        <p>v1.0</p>
+      </div>
     </div>
   </div>
 </footer>
@@ -126,6 +133,34 @@ const columns: [string, [string, string][]][] = [
     color: var(--text-secondary);
     text-decoration: underline;
     text-underline-offset: 2px;
+  }
+  .bottom-right {
+    display: flex;
+    align-items: center;
+    flex: none;
+    gap: 20px;
+  }
+  .motion-toggle {
+    position: relative;
+    padding: 4px 0;
+    margin: -4px 0;
+    color: var(--text-muted);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .motion-toggle:hover {
+    color: var(--text-primary);
+  }
+  .motion-toggle:has(:focus-visible) {
+    outline: 2px solid var(--accent-plumb);
+    outline-offset: 2px;
+  }
+  .to-play,
+  .motion-toggle:has(:checked) .to-pause {
+    display: none;
+  }
+  .motion-toggle:has(:checked) .to-play {
+    display: inline;
   }
 
   @media (max-width: 1023px) {

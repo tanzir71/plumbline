@@ -85,9 +85,16 @@ const items = [
     inset: -240px;
     z-index: -1;
     pointer-events: none;
-    background:
-      radial-gradient(115.2px 223px at 272.8px 50%, rgb(110 231 200 / 0.06), rgb(110 231 200 / 0)),
-      radial-gradient(403.2px 200.7px at calc(240px + (100% - 480px) * 0.572) calc(100% - 144px), rgb(143 162 255 / 0.1), rgb(143 162 255 / 0));
+    background: radial-gradient(115.2px 223px at 272.8px 50%, rgb(110 231 200 / 0.06), rgb(110 231 200 / 0));
+  }
+  /* A separate layer, so the blue glow can drift independently. */
+  .box-wrap::after {
+    content: "";
+    position: absolute;
+    inset: -240px;
+    z-index: -1;
+    pointer-events: none;
+    background: radial-gradient(403.2px 200.7px at calc(240px + (100% - 480px) * 0.572) calc(100% - 144px), rgb(143 162 255 / 0.1), rgb(143 162 255 / 0));
   }
   .box {
     display: flex;

@@ -96,8 +96,9 @@ const labels: [string, number, number][] = [
               <path d="M250 44L330 122" stroke="#353C46" stroke-width="1.5"></path>
               <path d="M260 131H161" stroke="#353C46" stroke-width="1.5"></path>
               <path d="M161 131L168 126.5M161 131L168 135.5" stroke="#353C46" stroke-width="1.5"></path>
-              <path d="M160 148H258" stroke="#FF6B81" stroke-width="2"></path>
-              <path d="M259 148L251.5 143.5M259 148L251.5 152.5" stroke="#FF6B81" stroke-width="2"></path>
+              <path class="edge-new" pathLength="1" d="M160 148H258" stroke="#FF6B81" stroke-width="2"></path>
+              <path class="edge-pulse" pathLength="1" d="M160 148H258" stroke="#FF6B81" stroke-width="3.5"></path>
+              <path class="edge-head" d="M259 148L251.5 143.5M259 148L251.5 152.5" stroke="#FF6B81" stroke-width="2"></path>
               <path d="M100 156V236" stroke="#353C46" stroke-width="1.5"></path>
               <path d="M150 156L300 236" stroke="#353C46" stroke-width="1.5"></path>
               <rect x="150" y="10" width="140" height="34" rx="6" fill="#1E242C"></rect>
@@ -276,8 +277,16 @@ const labels: [string, number, number][] = [
     pointer-events: none;
     background:
       radial-gradient(190px 380px at 200px calc(200px + (100% - 400px) * 0.55), rgb(110 231 200 / 0.15), transparent 100%),
-      radial-gradient(520px 140px at 50% calc(100% - 200px), rgb(143 162 255 / 0.19), transparent 100%),
       radial-gradient(160px 280px at calc(100% - 200px) calc(200px + (100% - 400px) * 0.25), rgb(183 155 255 / 0.08), transparent 100%);
+  }
+  /* A separate layer, so the blue glow can drift independently. */
+  .shot-wrap::after {
+    content: "";
+    position: absolute;
+    inset: -200px;
+    z-index: -1;
+    pointer-events: none;
+    background: radial-gradient(520px 140px at 50% calc(100% - 200px), rgb(143 162 255 / 0.19), transparent 100%);
   }
   .shot {
     border-radius: var(--r-2xl);
