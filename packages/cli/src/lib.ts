@@ -30,7 +30,7 @@ import {
   type ReportV1,
   type RunDir,
   type ScopeResult,
-} from "@plumbline/core";
+} from "@tanziro/plumbline-core";
 import pkg from "../package.json" with { type: "json" };
 
 export const VERSION: string = pkg.version;

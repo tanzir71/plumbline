@@ -27,7 +27,7 @@ The score is written as the `merge-score` step output on GitHub, and as `PLUMBLI
 ## Locally
 
 ```bash
-npx -y @plumbline/cli report --base main --gate
+npx -y @tanziro/plumbline report --base main --gate
 ```
 
 This exits non-zero under the same rule, so it works as a pre-push hook.

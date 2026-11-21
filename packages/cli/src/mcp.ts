@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { NothingToReviewError, renderMarkdown } from "@plumbline/core";
+import { NothingToReviewError, renderMarkdown } from "@tanziro/plumbline-core";
 import { z } from "zod";
 import { VERSION, listLenses, runCheck, runGraph, runReport, startScope } from "./lib.js";
 

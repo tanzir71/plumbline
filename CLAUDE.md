@@ -91,7 +91,7 @@ fixtures/           tiny repos with seeded issues (cycle, layer violation, tenan
 ## Commands (create these in M0)
 - `pnpm i` · `pnpm build` · `pnpm test` · `pnpm lint`
 - `pnpm --filter site dev` · `pnpm --filter site build`
-- `pnpm --filter @plumbline/cli exec plumbline graph --base main --json`
+- `pnpm --filter @tanziro/plumbline exec plumbline graph --base main --json`
 
 ## Working rules
 - Work milestone by milestone (HANDOVER.md §7) toward one full v1.0 launch. Finish each with tests green and a short entry in `CHANGELOG.md`.

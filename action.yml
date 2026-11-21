@@ -99,7 +99,7 @@ runs:
       run: |
         version="$(node -p "require(process.env.ACTION_PATH + '/packages/action/package.json').version")"
         cd "$RUNNER_TEMP"
-        npx --yes "@plumbline/action@${version}"
+        npx --yes "@tanziro/plumbline-action@${version}"
 
     - if: always() && steps.review.outputs.report-dir != ''
       uses: actions/upload-artifact@v7

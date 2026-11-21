@@ -147,7 +147,7 @@ test.describe("interactions", () => {
     await expect(page.getByRole("tab", { name: "GitHub Action" })).toBeFocused();
     await expect(page.getByRole("tabpanel")).toContainText("tanzir71/plumbline@v1");
     await page.keyboard.press("End");
-    await expect(page.getByRole("tabpanel")).toContainText("@plumbline/cli");
+    await expect(page.getByRole("tabpanel")).toContainText("@tanziro/plumbline");
     await page.keyboard.press("ArrowRight");
     await expect(page.getByRole("tab", { name: "Skill" })).toHaveAttribute("aria-selected", "true");
     await page.keyboard.press("ArrowLeft");

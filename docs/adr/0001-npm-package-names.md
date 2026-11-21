@@ -1,6 +1,6 @@
 # ADR 0001: Publish under the @plumbline scope
 
-Status: accepted (2026-11-21)
+Status: superseded by [ADR 0005](./0005-tanziro-npm-scope.md), because the `@plumbline` org belongs to someone else.
 
 ## Context
 

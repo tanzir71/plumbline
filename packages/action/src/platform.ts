@@ -1,4 +1,4 @@
-import { COMMENT_MARKER } from "@plumbline/core";
+import { COMMENT_MARKER } from "@tanziro/plumbline-core";
 
 export type FetchLike = typeof fetch;
 

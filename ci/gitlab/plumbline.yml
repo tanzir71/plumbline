@@ -28,7 +28,7 @@ plumbline:
     # Run npx from outside the checkout, so an MR's node_modules or .npmrc cannot replace the runtime.
     - export PLUMBLINE_WORKSPACE="$CI_PROJECT_DIR"
     - cd "$(mktemp -d)"
-    - npx --yes @plumbline/action@1
+    - npx --yes @tanziro/plumbline-action@1
   artifacts:
     when: always
     expire_in: 30 days

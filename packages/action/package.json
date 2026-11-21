@@ -1,5 +1,5 @@
 {
-  "name": "@plumbline/action",
+  "name": "@tanziro/plumbline-action",
   "version": "1.0.0",
   "description": "CI runtime for the Plumbline GitHub Action and GitLab CI template.",
   "license": "MIT",
@@ -21,8 +21,7 @@
     "skill"
   ],
   "publishConfig": {
-    "access": "public",
-    "provenance": true
+    "access": "public"
   },
   "scripts": {
     "build": "tsup && node ../../scripts/copy-skill.mjs",
@@ -30,7 +29,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@plumbline/cli": "workspace:^",
-    "@plumbline/core": "workspace:^"
+    "@tanziro/plumbline": "workspace:^",
+    "@tanziro/plumbline-core": "workspace:^"
   }
 }

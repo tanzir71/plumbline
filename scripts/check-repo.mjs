@@ -49,9 +49,12 @@ for (const file of walk(root)) {
 
   if (!CLAIM_ALLOWED.has(rel)) {
     for (const { re, why } of CLAIMS) if (re.test(text)) errors.push(`${rel}: ${why} (${re})`);
+    if (!rel.startsWith("docs/adr/") && /@plumbline\/(core|cli|action)/.test(text)) {
+      errors.push(`${rel}: uses the old @plumbline scope. The packages are under @tanziro (ADR 0005).`);
+    }
     // ADRs record why the bare command is banned, so they may quote it.
     if (!rel.startsWith("docs/adr/") && /npx\s+(-y\s+|--yes\s+)?plumbline(\s|$|["'`])/.test(text)) {
-      errors.push(`${rel}: "npx plumbline" runs an unrelated npm package. Use @plumbline/cli.`);
+      errors.push(`${rel}: "npx plumbline" runs an unrelated npm package. Use @tanziro/plumbline.`);
     }
   }
 }

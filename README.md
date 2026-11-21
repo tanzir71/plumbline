@@ -59,18 +59,18 @@ include:
 **MCP server**
 
 ```json
-{ "mcpServers": { "plumbline": { "command": "npx", "args": ["-y", "@plumbline/cli", "mcp"] } } }
+{ "mcpServers": { "plumbline": { "command": "npx", "args": ["-y", "@tanziro/plumbline", "mcp"] } } }
 ```
 
 **CLI**
 
 ```bash
-npx -y @plumbline/cli init
-npx -y @plumbline/cli graph --base main
-npx -y @plumbline/cli check
+npx -y @tanziro/plumbline init
+npx -y @tanziro/plumbline graph --base main
+npx -y @tanziro/plumbline check
 ```
 
-The CLI package is `@plumbline/cli`. The unscoped npm package `plumbline` is an unrelated project.
+The CLI package is `@tanziro/plumbline`. The unscoped npm package `plumbline` is an unrelated project.
 
 ## The contract
 

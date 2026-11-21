@@ -47,5 +47,5 @@ const installed = onPath("plumbline");
 if (installed) run(installed, args, isWindows && installed.endsWith(".cmd"));
 
 const npx = npxCli();
-if (npx) run(process.execPath, [npx, "-y", "@plumbline/cli@1", ...args]);
-run("npx", ["-y", "@plumbline/cli@1", ...args], isWindows);
+if (npx) run(process.execPath, [npx, "-y", "@tanziro/plumbline@1", ...args]);
+run("npx", ["-y", "@tanziro/plumbline@1", ...args], isWindows);

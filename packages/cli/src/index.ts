@@ -1,5 +1,5 @@
 import { parseArgs } from "node:util";
-import { ContractError, NothingToReviewError, formatCounts, formatCycle, formatScope, renderMarkdown } from "@plumbline/core";
+import { ContractError, NothingToReviewError, formatCounts, formatCycle, formatScope, renderMarkdown } from "@tanziro/plumbline-core";
 import { VERSION, runCheck, runGraph, runInit, runProve, runReport, startScope } from "./lib.js";
 
 const HELP = `plumbline ${VERSION}: review the structure, not just the diff.

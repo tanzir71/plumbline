@@ -2,7 +2,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { COMMENT_MARKER } from "@plumbline/core";
+import { COMMENT_MARKER } from "@tanziro/plumbline-core";
 import { describe, expect, it } from "vitest";
 import { materialize } from "../../../fixtures/materialize.mjs";
 import { agentEnv, canRunAgent, claudeArgs, codexArgs, stripNulls, type AgentConfig } from "../src/agent.js";

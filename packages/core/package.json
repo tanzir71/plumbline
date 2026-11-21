@@ -1,5 +1,5 @@
 {
-  "name": "@plumbline/core",
+  "name": "@tanziro/plumbline-core",
   "version": "1.0.0",
   "description": "Contract parser, import graph diff, rule checks, merge score and reports for Plumbline.",
   "license": "MIT",
@@ -28,8 +28,7 @@
     "schema"
   ],
   "publishConfig": {
-    "access": "public",
-    "provenance": true
+    "access": "public"
   },
   "scripts": {
     "build": "tsup",

@@ -7,11 +7,11 @@ order: 3
 The CLI needs no model. Run it with `npx`, or install it:
 
 ```bash
-npx -y @plumbline/cli --help
-npm install -D @plumbline/cli
+npx -y @tanziro/plumbline --help
+npm install -D @tanziro/plumbline
 ```
 
-The package is `@plumbline/cli` and its command is `plumbline`. The unscoped npm package named `plumbline` is an unrelated project, so **don't run `npx` with the bare name**.
+The package is `@tanziro/plumbline` and its command is `plumbline`. The unscoped npm package named `plumbline` is an unrelated project, so **don't run `npx` with the bare name**.
 
 ## Commands
 
@@ -54,7 +54,7 @@ Every command takes `--json` for machine-readable output.
 ## Pre-push hook
 
 ```bash
-npx -y @plumbline/cli report --base main --gate
+npx -y @tanziro/plumbline report --base main --gate
 ```
 
 Without model findings, this runs the graph and rule checks only.

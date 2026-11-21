@@ -11,7 +11,7 @@ importers:
       '@eslint/js':
         specifier: ^9.39.5
         version: 9.39.5
-      '@plumbline/cli':
+      '@tanziro/plumbline':
         specifier: workspace:*
         version: link:packages/cli
       '@types/node':
@@ -35,10 +35,10 @@ importers:
 
   packages/action:
     dependencies:
-      '@plumbline/cli':
+      '@tanziro/plumbline':
         specifier: workspace:^
         version: link:../cli
-      '@plumbline/core':
+      '@tanziro/plumbline-core':
         specifier: workspace:^
         version: link:../core
 
@@ -47,7 +47,7 @@ importers:
       '@modelcontextprotocol/sdk':
         specifier: ^1.32.2
         version: 1.32.2(zod@4.6.7)
-      '@plumbline/core':
+      '@tanziro/plumbline-core':
         specifier: workspace:^
         version: link:../core
       yaml:

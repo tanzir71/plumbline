@@ -33,7 +33,7 @@ In the commands below, `plumbline` means:
 node <skill-dir>/scripts/plumbline.mjs
 ```
 
-`<skill-dir>` is the folder holding this file. The launcher uses an installed `plumbline`, or else `npx -y @plumbline/cli@1`.
+`<skill-dir>` is the folder holding this file. The launcher uses an installed `plumbline`, or else `npx -y @tanziro/plumbline@1`.
 
 ## Step 1: Scope
 

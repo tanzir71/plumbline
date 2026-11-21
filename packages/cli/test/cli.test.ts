@@ -5,7 +5,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
-import { parseContract } from "@plumbline/core";
+import { parseContract } from "@tanziro/plumbline-core";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { materialize } from "../../../fixtures/materialize.mjs";
 

@@ -1,5 +1,5 @@
 {
-  "name": "@plumbline/cli",
+  "name": "@tanziro/plumbline",
   "version": "1.0.0",
   "description": "Plumbline CLI and MCP server: scope, import graph diff, contract checks and reports.",
   "license": "MIT",
@@ -29,8 +29,7 @@
     "lenses"
   ],
   "publishConfig": {
-    "access": "public",
-    "provenance": true
+    "access": "public"
   },
   "scripts": {
     "build": "tsup && node ../../scripts/copy-lenses.mjs",
@@ -39,7 +38,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.32.2",
-    "@plumbline/core": "workspace:^",
+    "@tanziro/plumbline-core": "workspace:^",
     "yaml": "^2.9.1",
     "zod": "^4.6.7"
   }

@@ -9,13 +9,13 @@ order: 4
 ## Configure
 
 ```json
-{ "mcpServers": { "plumbline": { "command": "npx", "args": ["-y", "@plumbline/cli", "mcp"] } } }
+{ "mcpServers": { "plumbline": { "command": "npx", "args": ["-y", "@tanziro/plumbline", "mcp"] } } }
 ```
 
 In Claude Code:
 
 ```bash
-claude mcp add plumbline -- npx -y @plumbline/cli mcp
+claude mcp add plumbline -- npx -y @tanziro/plumbline mcp
 ```
 
 ## Tools

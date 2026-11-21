@@ -1,8 +1,8 @@
 import { appendFileSync, copyFileSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { NothingToReviewError, parseFindingsFile, renderMarkdown, tryGit } from "@plumbline/core";
-import { runGraph, runReport } from "@plumbline/cli";
+import { NothingToReviewError, parseFindingsFile, renderMarkdown, tryGit } from "@tanziro/plumbline-core";
+import { runGraph, runReport } from "@tanziro/plumbline";
 import { PROVIDERS, canRunAgent, defaultExec, runAgent, type AgentConfig, type Exec, type Provider } from "./agent.js";
 import { github, gitlab, type FetchLike, type Platform } from "./platform.js";
 
@@ -180,7 +180,7 @@ export async function runCi(env: Env, deps: CiDeps = {}): Promise<number> {
             runDir: run.dir,
             env,
             exec: deps.exec ?? defaultExec,
-            cliEntry: fileURLToPath(import.meta.resolve("@plumbline/cli")).replace(/lib\.js$/, "index.js"),
+            cliEntry: fileURLToPath(import.meta.resolve("@tanziro/plumbline")).replace(/lib\.js$/, "index.js"),
           });
       parseFindingsFile(raw);
       modelFile = raw;
