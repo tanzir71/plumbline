@@ -13,6 +13,9 @@ const errors = [];
 
 for (const v of vendors) {
   if (!/^https:\/\//.test(v.sourceUrl ?? "")) errors.push(`${v.id}: missing https sourceUrl`);
+  if (v.model !== "free" && !/^https:\/\/web\.archive\.org\/web\/\d{14}\//.test(v.archiveUrl ?? "")) {
+    errors.push(`${v.id}: missing Wayback Machine archiveUrl`);
+  }
   const checked = new Date(`${v.checkedAt}T00:00:00Z`);
   if (Number.isNaN(checked.getTime())) {
     errors.push(`${v.id}: invalid checkedAt "${v.checkedAt}"`);
