@@ -1,5 +1,6 @@
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
@@ -186,6 +187,24 @@ test("listAll stays inside the org", () => assert.equal(listAll({ orgId: "a" }).
     report = JSON.parse(cli(repo, "report", "--json").out);
     expect(report.findings[0].severity).toBe("P1");
     expect(report.score.value).toBe(3);
+  }, T);
+
+  it("prove and check --contract work when the repo is reached through a link", () => {
+    const repo = materialize("clean");
+    const link = join(mkdtempSync(join(tmpdir(), "plumbline-link-")), "linked");
+    symlinkSync(repo, link, "junction");
+
+    mkdirSync(join(repo, ".plumbline/proofs"), { recursive: true });
+    writeFileSync(join(repo, ".plumbline/proofs/x.test.js"), 'import { test } from "node:test";\ntest("fails", () => { throw new Error("boom"); });\n');
+    const proved = cli(link, "prove", ".plumbline/proofs/x.test.js", "--json", "--", process.execPath, "--test", ".plumbline/proofs/x.test.js");
+    expect(proved.err).toBe("");
+    expect(proved.code).toBe(0);
+    expect(JSON.parse(proved.out).ref).toBe(".plumbline/proofs/x.test.js");
+    expect(JSON.parse(proved.out).exitCode).not.toBe(0);
+
+    writeFileSync(join(repo, ".plumbline/shared.yml"), 'version: 1\nmodules:\n  api: ["src/api/**"]\n');
+    writeFileSync(join(repo, ".plumbline/draft.yml"), "version: 1\nextends: ./shared.yml\n");
+    expect(cli(link, "check", "--contract", ".plumbline/draft.yml").code).toBe(0);
   }, T);
 
   it("prove refuses a test outside the proofs folder", () => {

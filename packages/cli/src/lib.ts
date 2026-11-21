@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, realpathSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -36,6 +36,12 @@ import pkg from "../package.json" with { type: "json" };
 export const VERSION: string = pkg.version;
 
 const OUTPUT_LIMIT = 8000;
+
+/**
+ * git reports a repo's real path, but the working directory can reach it another way: a symlink,
+ * a junction, or a Windows 8.3 short name. Compare real paths so those don't look like different folders.
+ */
+const canonical = (path: string) => (existsSync(path) ? realpathSync.native(path) : path);
 
 export function lensDir(): string {
   const here = dirname(fileURLToPath(import.meta.url));
@@ -110,8 +116,8 @@ export interface CheckArgs {
 
 /** Evaluate the contract against the current tree. Needs no base branch. */
 export async function runCheck(args: CheckArgs): Promise<{ result: CheckResult; run: RunDir; hasContract: boolean }> {
-  const root = repoRoot(args.cwd);
-  const contract = args.contract ? loadContract(root, resolve(args.cwd, args.contract)) : loadContract(root);
+  const root = canonical(repoRoot(args.cwd));
+  const contract = args.contract ? loadContract(root, canonical(resolve(args.cwd, args.contract))) : loadContract(root);
   if (args.contract && !contract) throw new Error(`contract not found: ${args.contract}`);
   const graph = await buildGraph(root);
   const result = checkContract(graph, contract ?? emptyContract(), {
@@ -135,8 +141,8 @@ export interface ProveArgs {
 
 /** Run a proof test and record what actually happened. Only these records satisfy the proof gate. */
 export function runProve(args: ProveArgs): RecordedProof {
-  const root = repoRoot(args.cwd);
-  const test = resolve(args.cwd, args.test);
+  const root = canonical(repoRoot(args.cwd));
+  const test = canonical(resolve(args.cwd, args.test));
   const ref = relative(root, test).replaceAll("\\", "/");
   if (!ref.startsWith(".plumbline/proofs/")) throw new Error("proof tests must live under .plumbline/proofs/");
   if (!existsSync(test)) throw new Error(`test not found: ${args.test}`);
