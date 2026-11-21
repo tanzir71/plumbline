@@ -29,6 +29,8 @@ Plumbline is an open-source code reviewer that runs with your own model keys. It
 - The deterministic graph checks cover **JS and TS only** in v1.0. The model lenses work in any language.
 - Static imports are what the graph sees. Dynamic imports, string-keyed registries and service calls are left to the model reviewers.
 - A model can miss things or be wrong. A person always approves. Plumbline never approves or merges a PR.
+- The GitHub Action and GitLab template have automated tests against simulated APIs, but v1.0 has not yet run them in live pipelines. Treat them as early.
+- The review flow has been run on Claude through Claude Code. Codex, OpenCode and the other model providers are supported but not yet verified end to end.
 
 ## Next
 

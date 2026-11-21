@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.0 (unreleased)
+## 1.0.0 (2026-11-22)
 
 The first release of Plumbline: an open-source code reviewer that checks the structure, not just the diff.
 
@@ -26,6 +26,8 @@ The first release of Plumbline: an open-source code reviewer that checks the str
 
 - Deterministic graph checks cover JS and TS only
 - Nothing in Plumbline approves or merges a PR. A person always does
+- The GitHub Action and GitLab template are tested against simulated APIs and have not yet run in live pipelines
+- The review flow has been run on Claude through Claude Code. Codex, OpenCode and other providers are not yet verified end to end
 
 ### Build log
 

@@ -1,13 +1,13 @@
 {
-  "_rule": "Every status must be true on launch day. Flip a row to available (since v1.0) only when its milestone passes acceptance (HANDOVER.md §7). Anything that misses v1.0 says roadmap with its real target.",
+  "_rule": "Every status must be true on launch day. Flip a row to available only when its milestone passes acceptance (HANDOVER.md §7). Anything only partly verified says partial.",
   "rows": [
-    { "capability": "Deployment", "how": "Your local agent, self-hosted CI runners, or fully air-gapped with a local model.", "status": "roadmap", "target": "v1.0", "milestone": "M2" },
-    { "capability": "Data handling", "how": "No Plumbline servers and no telemetry by default. Code goes only to the model endpoint you configure.", "status": "roadmap", "target": "v1.0", "milestone": "M2" },
-    { "capability": "Model choice", "how": "Any provider your agent supports, including Anthropic, OpenAI, Bedrock, Vertex and OpenAI-compatible endpoints.", "status": "roadmap", "target": "v1.0", "milestone": "M4" },
-    { "capability": "Policy as code", "how": "plumbline.yml lives in the repo, reviewed and versioned like code. Share one contract across repos.", "status": "roadmap", "target": "v1.0", "milestone": "M1" },
-    { "capability": "Audit trail", "how": "Every run saved as JSON and SARIF, ready for code scanning and your SIEM.", "status": "roadmap", "target": "v1.0", "milestone": "M4" },
-    { "capability": "Merge gating", "how": "Required status check with a minimum merge score per branch.", "status": "roadmap", "target": "v1.0", "milestone": "M4" },
-    { "capability": "SCM coverage", "how": "GitHub Action and GitLab CI template. Any other CI through the CLI.", "status": "roadmap", "target": "v1.0", "milestone": "M5" },
-    { "capability": "Risk lanes", "how": "Marks low-risk PRs for a light-review lane. Never auto-merges: a person always approves.", "status": "roadmap", "target": "v1.0", "milestone": "M4" }
+    { "capability": "Deployment", "how": "Your local agent, self-hosted CI runners, or fully air-gapped with a local model.", "status": "partial", "target": "v1.x", "milestone": "M2", "verified": "Local agent. Self-hosted runners and air-gapped use have not been run." },
+    { "capability": "Data handling", "how": "No Plumbline servers and no telemetry by default. Code goes only to the model endpoint you configure.", "status": "available", "since": "v1.0", "milestone": "M2" },
+    { "capability": "Model choice", "how": "Any provider your agent supports, including Anthropic, OpenAI, Bedrock, Vertex and OpenAI-compatible endpoints.", "status": "partial", "target": "v1.x", "milestone": "M4", "verified": "Claude through Claude Code. Other providers are implemented but have not run end to end." },
+    { "capability": "Policy as code", "how": "plumbline.yml lives in the repo, reviewed and versioned like code. Share one contract across repos.", "status": "available", "since": "v1.0", "milestone": "M1" },
+    { "capability": "Audit trail", "how": "Every run saved as JSON and SARIF, ready for code scanning and your SIEM.", "status": "available", "since": "v1.0", "milestone": "M4" },
+    { "capability": "Merge gating", "how": "Required status check with a minimum merge score per branch.", "status": "partial", "target": "v1.x", "milestone": "M4", "verified": "The CLI gate works. The CI check has only run against simulated APIs." },
+    { "capability": "SCM coverage", "how": "GitHub Action and GitLab CI template. Any other CI through the CLI.", "status": "partial", "target": "v1.x", "milestone": "M5", "verified": "Both have only run against simulated APIs." },
+    { "capability": "Risk lanes", "how": "Marks low-risk PRs for a light-review lane. Never auto-merges: a person always approves.", "status": "partial", "target": "v1.x", "milestone": "M4", "verified": "The lane decision is tested. Labels have only been applied through simulated APIs." }
   ]
 }

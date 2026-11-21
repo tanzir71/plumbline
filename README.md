@@ -111,6 +111,8 @@ The scoring rules come from the MIT-licensed project Plumbline is based on, cred
 - The deterministic graph checks cover **JS and TS only** in v1.0. The model lenses work in any language.
 - The graph sees static imports. Dynamic imports and service calls are left to the model reviewers.
 - Models can be wrong or miss things. Plumbline publishes no accuracy figures.
+- The GitHub Action and GitLab template have automated tests against simulated APIs, but v1.0 has not yet run them in live pipelines. Treat them as early.
+- The review flow has been run on Claude through Claude Code. Codex, OpenCode and the other model providers are supported but not yet verified end to end.
 
 ## Development
 
