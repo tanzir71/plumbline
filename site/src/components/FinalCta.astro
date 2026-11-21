@@ -23,6 +23,8 @@ const items = [
     </div>
 
     <div class="box-wrap">
+      <span class="glow-shift glow-shift-a" aria-hidden="true"></span>
+      <span class="glow-shift glow-shift-b" aria-hidden="true"></span>
       <div class="box">
         <p class="micro">FOR TEAMS ROLLING OUT</p>
         <h3>Architecture audit</h3>
@@ -95,6 +97,20 @@ const items = [
     z-index: -1;
     pointer-events: none;
     background: radial-gradient(403.2px 200.7px at calc(240px + (100% - 480px) * 0.572) calc(100% - 144px), rgb(143 162 255 / 0.1), rgb(143 162 255 / 0));
+  }
+  /* The same glows in other palette colours. Hidden unless motion is on. */
+  .glow-shift {
+    position: absolute;
+    inset: -240px;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0;
+  }
+  .glow-shift-a {
+    background: radial-gradient(115.2px 223px at 272.8px 50%, rgb(183 155 255 / 0.11), rgb(183 155 255 / 0));
+  }
+  .glow-shift-b {
+    background: radial-gradient(403.2px 200.7px at calc(240px + (100% - 480px) * 0.572) calc(100% - 144px), rgb(110 231 200 / 0.09), rgb(110 231 200 / 0));
   }
   .box {
     display: flex;

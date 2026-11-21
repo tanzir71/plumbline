@@ -52,6 +52,8 @@ const labels: [string, number, number][] = [
     </div>
 
     <div class="shot-wrap">
+      <span class="glow-shift glow-shift-a" aria-hidden="true"></span>
+      <span class="glow-shift glow-shift-b" aria-hidden="true"></span>
       <figure class="shot" aria-label="Example Plumbline review of a pull request">
         <figcaption class="bar">
           <span class="bar-left"><span class="cmd">plumbline review</span><span class="pr">PR #482 &nbsp;·&nbsp; feat: org-level invoices</span></span>
@@ -96,9 +98,9 @@ const labels: [string, number, number][] = [
               <path d="M250 44L330 122" stroke="#353C46" stroke-width="1.5"></path>
               <path d="M260 131H161" stroke="#353C46" stroke-width="1.5"></path>
               <path d="M161 131L168 126.5M161 131L168 135.5" stroke="#353C46" stroke-width="1.5"></path>
-              <path class="edge-new" pathLength="1" d="M160 148H258" stroke="#FF6B81" stroke-width="2"></path>
-              <path class="edge-pulse" pathLength="1" d="M160 148H258" stroke="#FF6B81" stroke-width="3.5"></path>
-              <path class="edge-head" d="M259 148L251.5 143.5M259 148L251.5 152.5" stroke="#FF6B81" stroke-width="2"></path>
+              <path class="edge-solid" d="M160 148H258" stroke="#FF6B81" stroke-width="2"></path>
+              <path class="edge-solid" d="M259 148L251.5 143.5M259 148L251.5 152.5" stroke="#FF6B81" stroke-width="2"></path>
+              <circle class="edge-dot" cx="167" cy="148" r="3" fill="#FF6B81" style="--run: 78px"></circle>
               <path d="M100 156V236" stroke="#353C46" stroke-width="1.5"></path>
               <path d="M150 156L300 236" stroke="#353C46" stroke-width="1.5"></path>
               <rect x="150" y="10" width="140" height="34" rx="6" fill="#1E242C"></rect>
@@ -287,6 +289,22 @@ const labels: [string, number, number][] = [
     z-index: -1;
     pointer-events: none;
     background: radial-gradient(520px 140px at 50% calc(100% - 200px), rgb(143 162 255 / 0.19), transparent 100%);
+  }
+  /* The same glows in other palette colours. Hidden unless motion is on. */
+  .glow-shift {
+    position: absolute;
+    inset: -200px;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0;
+  }
+  .glow-shift-a {
+    background:
+      radial-gradient(190px 380px at 200px calc(200px + (100% - 400px) * 0.55), rgb(143 162 255 / 0.18), transparent 100%),
+      radial-gradient(160px 280px at calc(100% - 200px) calc(200px + (100% - 400px) * 0.25), rgb(110 231 200 / 0.12), transparent 100%);
+  }
+  .glow-shift-b {
+    background: radial-gradient(520px 140px at 50% calc(100% - 200px), rgb(183 155 255 / 0.2), transparent 100%);
   }
   .shot {
     border-radius: var(--r-2xl);

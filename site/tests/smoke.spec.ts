@@ -101,6 +101,8 @@ test.describe("structure", () => {
     await page.goto(HOME);
     const bad = await page.evaluate(() =>
       [...document.querySelectorAll<HTMLElement>("body *")]
+        // The colour-shift layers are background glow, and may only sit behind the two glow panels.
+        .filter((el) => !(el.classList.contains("glow-shift") && el.parentElement?.matches(".shot-wrap, .box-wrap")))
         .filter((el) => {
           const s = getComputedStyle(el);
           return s.backgroundImage.includes("gradient") || s.boxShadow !== "none" || s.textShadow !== "none";
@@ -149,14 +151,68 @@ test.describe("motion", () => {
   test("the glows and all four diagrams animate", async ({ page }) => {
     await page.goto(HOME);
     const names = new Set((await running(page)).map((a) => a.name));
-    for (const name of ["glow-drift-a", "glow-drift-b", "edge-pulse", "rail-run", "leader-run", "rail-marker", "egress-drop"]) {
+    for (const name of ["glow-drift-a", "glow-drift-b", "glow-shift-a", "glow-shift-b", "edge-pulse", "rail-run", "leader-run", "rail-marker", "egress-drop"]) {
       expect(names, name).toContain(name);
+    }
+  });
+
+  test("diagram lines stay solid at every scroll position and moment", async ({ page }) => {
+    await page.goto(HOME);
+    await expect(page.locator(".edge-solid")).toHaveCount(5);
+    const height = await page.evaluate(() => document.documentElement.scrollHeight);
+    for (let step = 0; step <= 12; step++) {
+      await page.evaluate((y) => window.scrollTo({ top: y, behavior: "instant" }), (height * step) / 12);
+      await page.waitForTimeout(90);
+      const broken = await page.evaluate(() =>
+        [...document.querySelectorAll<SVGElement>(".edge-solid")].filter((el) => {
+          const s = getComputedStyle(el);
+          return el.getAnimations().length > 0 || s.opacity !== "1" || s.strokeDasharray !== "none" || s.visibility !== "visible";
+        }).length,
+      );
+      expect(broken, `at scroll step ${step}`).toBe(0);
+    }
+  });
+
+  test("the travelling dots stay on their lines", async ({ page }) => {
+    await page.goto(HOME);
+    const out = await page.evaluate(() => {
+      const results: string[] = [];
+      for (const dot of document.querySelectorAll<SVGCircleElement>(".edge-dot")) {
+        const run = parseFloat(dot.style.getPropertyValue("--run"));
+        const start = dot.cx.baseVal.value;
+        const line = dot.parentElement?.querySelector<SVGPathElement>("path.edge-solid[d^='M1']");
+        const end = line ? start + run : 0;
+        if (!(run > 0) || end + dot.r.baseVal.value > (dot.closest("svg.graph") ? 251.5 : 299.5)) results.push(`${start}+${run}`);
+      }
+      return results;
+    });
+    expect(out).toEqual([]);
+  });
+
+  test("the glows change between cool palette colours and stay behind their panels", async ({ page }) => {
+    await page.goto(HOME);
+    const layers = await page.evaluate(() =>
+      [...document.querySelectorAll<HTMLElement>(".glow-shift")].map((el) => {
+        const panel = el.parentElement?.querySelector(".shot, .box") as HTMLElement;
+        return {
+          z: getComputedStyle(el).zIndex,
+          before: Boolean(el.compareDocumentPosition(panel) & Node.DOCUMENT_POSITION_FOLLOWING),
+          colours: [...getComputedStyle(el).backgroundImage.matchAll(/rgba?\((\d+), (\d+), (\d+)/g)].map((m) => `${m[1]},${m[2]},${m[3]}`),
+        };
+      }),
+    );
+    expect(layers).toHaveLength(4);
+    const palette = new Set(["110,231,200", "143,162,255", "183,155,255", "0,0,0"]);
+    for (const layer of layers) {
+      expect(layer.z).toBe("-1");
+      expect(layer.before).toBe(true);
+      for (const colour of layer.colours) expect(palette, colour).toContain(colour);
     }
   });
 
   test("animates only cheap properties, so it cannot shift the layout", async ({ page }) => {
     await page.goto(HOME);
-    const allowed = new Set(["transform", "transformOrigin", "opacity", "strokeDashoffset"]);
+    const allowed = new Set(["transform", "opacity"]);
     for (const a of await running(page)) {
       if (!a.name) continue;
       for (const prop of a.props) expect(allowed, `${a.name}: ${prop}`).toContain(prop);
@@ -181,8 +237,11 @@ test.describe("motion", () => {
       await page.goto(HOME);
       expect((await running(page)).filter((a) => a.name)).toEqual([]);
       await expect(page.locator(".motion-toggle")).toBeHidden();
-      for (const edge of await page.locator(".edge-new").all()) {
-        expect(await edge.evaluate((el) => getComputedStyle(el).strokeDasharray)).toBe("none");
+      for (const layer of await page.locator(".glow-shift").all()) {
+        expect(await layer.evaluate((el) => getComputedStyle(el).opacity)).toBe("0");
+      }
+      for (const dot of await page.locator(".edge-dot").all()) {
+        expect(await dot.evaluate((el) => getComputedStyle(el).opacity)).toBe("0");
       }
     });
   });
