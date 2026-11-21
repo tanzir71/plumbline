@@ -56,8 +56,10 @@ const fonts = [
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
     {noindex && <meta name="robots" content="noindex" />}
-    <meta name="theme-color" content="#0A0C0F" />
-    <link rel="icon" type="image/svg+xml" href={url("favicon.svg")} />
+    <meta name="theme-color" content="#121315" />
+    <link rel="icon" href={url("favicon.ico")} sizes="48x48" />
+    <link rel="icon" type="image/svg+xml" href={url("favicon.svg")} sizes="any" />
+    <link rel="apple-touch-icon" href={url("apple-touch-icon.png")} />
     <meta property="og:type" content="website" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />

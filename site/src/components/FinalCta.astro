@@ -1,13 +1,14 @@
 ---
-import check from "../assets/figma/check-accent-14.svg?url";
 import arrow from "../assets/figma/arrow-14.svg?url";
 import Button from "./Button.astro";
+import GlowMesh from "./GlowMesh.astro";
 import { url } from "../lib/url";
 
-const items = [
-  "Contract drafted from your ADRs and agent rules",
-  "Lenses tuned on your last 100 merged PRs",
-  "CI gating set up branch by branch",
+/** Each step names the real part of Plumbline it produces. */
+const steps = [
+  { text: "Contract drafted from your ADRs and agent rules", output: "plumbline.yml" },
+  { text: "Lenses tuned on your last 100 merged PRs", output: ".plumbline/lenses" },
+  { text: "CI gating set up branch by branch", output: "gate + lanes" },
 ];
 ---
 
@@ -23,15 +24,27 @@ const items = [
     </div>
 
     <div class="box-wrap">
-      <span class="glow-shift glow-shift-a" aria-hidden="true"></span>
-      <span class="glow-shift glow-shift-b" aria-hidden="true"></span>
-      <div class="box">
-        <p class="micro">FOR TEAMS ROLLING OUT</p>
-        <h3>Architecture audit</h3>
-        <ul>
-          {items.map((t) => <li><img src={check} alt="" width="14" height="14" />{t}</li>)}
-        </ul>
-        <a class="book" href="#audit">Book an architecture audit <img src={arrow} alt="" width="14" height="14" /></a>
+      <GlowMesh variant="cta" />
+      <div class="box" role="group" aria-labelledby="audit-title">
+        <div class="box-head">
+          <p class="micro">FOR TEAMS ROLLING OUT</p>
+          <span class="count">{steps.length} steps</span>
+        </div>
+        <div class="box-body">
+          <h3 id="audit-title">Architecture audit</h3>
+          <ol>
+            {steps.map(({ text, output }, i) => (
+              <li>
+                <span class="n" aria-hidden="true">{`0${i + 1}`}</span>
+                <div><p>{text}</p><code>{output}</code></div>
+              </li>
+            ))}
+          </ol>
+        </div>
+        <div class="box-foot">
+          <span class="note">You approve every merge</span>
+          <a class="book" href="#audit">Book an architecture audit <img src={arrow} alt="" width="14" height="14" /></a>
+        </div>
       </div>
     </div>
   </div>
@@ -49,6 +62,9 @@ const items = [
     gap: 56px;
   }
   .left {
+    /* Keeps the text above the light behind the teams box. */
+    position: relative;
+    z-index: 1;
     display: flex;
     flex-direction: column;
     gap: 20px;
@@ -80,78 +96,102 @@ const items = [
     flex: none;
     width: 460px;
   }
-  /* Halo only: the opaque box covers the middle of each glow. */
-  .box-wrap::before {
-    content: "";
-    position: absolute;
-    inset: -240px;
-    z-index: -1;
-    pointer-events: none;
-    background: radial-gradient(115.2px 223px at 272.8px 50%, rgb(110 231 200 / 0.06), rgb(110 231 200 / 0));
-  }
-  /* A separate layer, so the blue glow can drift independently. */
-  .box-wrap::after {
-    content: "";
-    position: absolute;
-    inset: -240px;
-    z-index: -1;
-    pointer-events: none;
-    background: radial-gradient(403.2px 200.7px at calc(240px + (100% - 480px) * 0.572) calc(100% - 144px), rgb(143 162 255 / 0.1), rgb(143 162 255 / 0));
-  }
-  /* The same glows in other palette colours. Hidden unless motion is on. */
-  .glow-shift {
-    position: absolute;
-    inset: -240px;
-    z-index: -1;
-    pointer-events: none;
-    opacity: 0;
-  }
-  .glow-shift-a {
-    background: radial-gradient(115.2px 223px at 272.8px 50%, rgb(183 155 255 / 0.11), rgb(183 155 255 / 0));
-  }
-  .glow-shift-b {
-    background: radial-gradient(403.2px 200.7px at calc(240px + (100% - 480px) * 0.572) calc(100% - 144px), rgb(110 231 200 / 0.09), rgb(110 231 200 / 0));
-  }
+  /* A dialog built from tonal bands, like the hero panel. No strokes. */
   .box {
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    padding: 28px;
-    border-radius: var(--r-xl);
+    border-radius: var(--r-2xl);
     background: var(--bg-surface);
+    overflow: clip;
+  }
+  .box-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 13px 24px;
+    background: var(--bg-raised);
+  }
+  .count,
+  .note {
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 14px;
+  }
+  .box-body {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 24px;
   }
   h3 {
-    font-size: 20px;
+    font-size: 22px;
     font-weight: 500;
-    line-height: 26px;
-    letter-spacing: -0.2px;
+    line-height: 28px;
+    letter-spacing: -0.33px;
     color: var(--text-primary);
   }
-  ul {
+  ol {
     display: flex;
     flex-direction: column;
     gap: 16px;
   }
   li {
     display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 14px;
-    line-height: 18px;
-    color: var(--text-secondary);
+    align-items: flex-start;
+    gap: 14px;
   }
-  li img {
+  .n {
     flex: none;
+    color: var(--accent-plumb);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 20px;
+  }
+  li div {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+  }
+  li p {
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--text-primary);
+  }
+  li code {
+    color: var(--text-muted);
+    font-size: 12px;
+    line-height: 16px;
+  }
+  .box-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px 16px;
+    padding: 12px 12px 12px 24px;
+    background: var(--bg-inset);
   }
   .book {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding-top: 6px;
-    font-size: 14px;
+    margin-left: auto;
+    padding: 9px 13px;
+    border-radius: var(--r-md);
+    background: var(--bg-raised);
+    color: var(--text-primary);
+    font-size: 13px;
     font-weight: 500;
     line-height: 18px;
-    color: var(--text-primary);
+    white-space: nowrap;
+    transition: background-color 120ms ease;
+  }
+  .book:hover {
+    background: #282a2e;
   }
 
   @media (max-width: 1279px) {
@@ -186,8 +226,22 @@ const items = [
       font-size: 28px;
       line-height: 34px;
     }
-    .box {
-      padding: 20px;
+    .box-head {
+      padding: 12px 18px;
+    }
+    .box-body {
+      padding: 20px 18px;
+    }
+    .box-foot {
+      padding: 12px;
+    }
+    .note {
+      padding-left: 6px;
+    }
+    .book {
+      justify-content: center;
+      width: 100%;
+      margin-left: 0;
     }
   }
 </style>

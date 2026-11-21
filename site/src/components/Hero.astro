@@ -2,6 +2,8 @@
 import Button from "./Button.astro";
 import CopyButton from "./CopyButton.astro";
 import FindingRow from "./FindingRow.astro";
+import GlowMesh from "./GlowMesh.astro";
+import Signal from "./Signal.astro";
 import snippets from "../data/snippets.json";
 import { REPO, url } from "../lib/url";
 
@@ -14,12 +16,31 @@ const glance = [
   ["License", "MIT. No account, no Plumbline servers"],
 ];
 
-const labels: [string, number, number][] = [
-  ["api/invoices", 220, 27],
-  ["billing", 100, 139],
-  ["users/session", 335, 139],
-  ["orgs", 100, 253],
-  ["db/invoices", 335, 253],
+/** Nodes sit on a symmetric grid. The last value marks the two modules in the cycle. */
+const nodes: [string, number, number, boolean][] = [
+  ["api/invoices", 154, 8, false],
+  ["billing", 36, 124, true],
+  ["users/session", 272, 124, true],
+  ["orgs", 36, 240, false],
+  ["db/invoices", 272, 240, false],
+];
+const NODE_W = 132;
+const NODE_H = 34;
+
+const edges = {
+  apiBilling: "M196 44V73a10 10 0 0 1-10 10H112a10 10 0 0 0-10 10V122",
+  apiUsers: "M244 44V73a10 10 0 0 0 10 10H328a10 10 0 0 1 10 10V122",
+  usersBilling: "M270 133H170",
+  billingUsers: "M170 149H270",
+  billingOrgs: "M102 160V238",
+  billingDb: "M134 160V189a10 10 0 0 0 10 10H328a10 10 0 0 1 10 10V238",
+};
+const arrows = [
+  "M97.5 117.5L102 122L106.5 117.5",
+  "M333.5 117.5L338 122L342.5 117.5",
+  "M174.5 128.5L170 133L174.5 137.5",
+  "M97.5 233.5L102 238L106.5 233.5",
+  "M333.5 233.5L338 238L342.5 233.5",
 ];
 ---
 
@@ -52,8 +73,7 @@ const labels: [string, number, number][] = [
     </div>
 
     <div class="shot-wrap">
-      <span class="glow-shift glow-shift-a" aria-hidden="true"></span>
-      <span class="glow-shift glow-shift-b" aria-hidden="true"></span>
+      <GlowMesh variant="hero" />
       <figure class="shot" aria-label="Example Plumbline review of a pull request">
         <figcaption class="bar">
           <span class="bar-left"><span class="cmd">plumbline review</span><span class="pr">PR #482 &nbsp;·&nbsp; feat: org-level invoices</span></span>
@@ -94,21 +114,23 @@ const labels: [string, number, number][] = [
           <div class="diff">
             <p class="micro">DEPENDENCY DIFF</p>
             <svg class="graph" width="440" height="290" viewBox="0 0 440 290" fill="none" role="img" aria-label="Dependency graph. A new edge from billing to users/session closes a cycle, because users/session already depends on billing.">
-              <path d="M200 44L110 122" stroke="#353C46" stroke-width="1.5"></path>
-              <path d="M250 44L330 122" stroke="#353C46" stroke-width="1.5"></path>
-              <path d="M260 131H161" stroke="#353C46" stroke-width="1.5"></path>
-              <path d="M161 131L168 126.5M161 131L168 135.5" stroke="#353C46" stroke-width="1.5"></path>
-              <path class="edge-solid" d="M160 148H258" stroke="#FF6B81" stroke-width="2"></path>
-              <path class="edge-solid" d="M259 148L251.5 143.5M259 148L251.5 152.5" stroke="#FF6B81" stroke-width="2"></path>
-              <circle class="edge-dot" cx="167" cy="148" r="3" fill="#FF6B81" style="--run: 78px"></circle>
-              <path d="M100 156V236" stroke="#353C46" stroke-width="1.5"></path>
-              <path d="M150 156L300 236" stroke="#353C46" stroke-width="1.5"></path>
-              <rect x="150" y="10" width="140" height="34" rx="6" fill="#1E242C"></rect>
-              <rect x="40" y="122" width="120" height="34" rx="6" fill="#1E242C"></rect>
-              <rect x="260" y="122" width="150" height="34" rx="6" fill="#1E242C"></rect>
-              <rect x="40" y="236" width="120" height="34" rx="6" fill="#1E242C"></rect>
-              <rect x="260" y="236" width="150" height="34" rx="6" fill="#1E242C"></rect>
-              {labels.map(([t, x, y]) => <text x={x} y={y} text-anchor="middle" dominant-baseline="central">{t}</text>)}
+              <g stroke="#3A3D43" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                {[edges.apiBilling, edges.apiUsers, edges.usersBilling, edges.billingOrgs, edges.billingDb].map((d) => <path d={d}></path>)}
+                {arrows.map((d) => <path d={d}></path>)}
+              </g>
+              <path class="edge-solid" d={edges.billingUsers} stroke="#FF6B81" stroke-width="2" stroke-linecap="round"></path>
+              <path class="edge-solid" d="M264.5 143.5L270 149L264.5 154.5" stroke="#FF6B81" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+              <Signal d={edges.apiBilling} at={0} />
+              <Signal d={edges.apiUsers} at={0.3} />
+              <Signal d={edges.billingOrgs} at={1.2} />
+              <Signal d={edges.billingDb} at={1.5} />
+              <Signal d={edges.billingUsers} at={2.9} tone="red" />
+              <Signal d={edges.usersBilling} at={4.4} tone="red" />
+              {nodes.map(([, x, y]) => <rect x={x} y={y} width={NODE_W} height={NODE_H} rx="8" fill="#26282C"></rect>)}
+              {nodes.map(([t, x, y, cycle]) => (
+                <text class:list={{ quiet: !cycle }} x={x + NODE_W / 2} y={y + NODE_H / 2} text-anchor="middle" dominant-baseline="central">{t}</text>
+              ))}
+              <text class="signal-hit" x="338" y="141" text-anchor="middle" dominant-baseline="central" style="--at: 2.9s">users/session</text>
             </svg>
             <div class="legend">
               <span><i style="background: var(--line-edge)"></i>existing edge</span>
@@ -137,6 +159,9 @@ const labels: [string, number, number][] = [
     gap: 48px;
   }
   .top {
+    /* Keeps the text above the light behind the product shot. */
+    position: relative;
+    z-index: 1;
     display: flex;
     align-items: center;
     gap: 64px;
@@ -270,42 +295,6 @@ const labels: [string, number, number][] = [
     position: relative;
     isolation: isolate;
   }
-  /* Glow lives in the background, centred on the shot's edges, so only a halo shows. */
-  .shot-wrap::before {
-    content: "";
-    position: absolute;
-    inset: -200px;
-    z-index: -1;
-    pointer-events: none;
-    background:
-      radial-gradient(190px 380px at 200px calc(200px + (100% - 400px) * 0.55), rgb(110 231 200 / 0.15), transparent 100%),
-      radial-gradient(160px 280px at calc(100% - 200px) calc(200px + (100% - 400px) * 0.25), rgb(183 155 255 / 0.08), transparent 100%);
-  }
-  /* A separate layer, so the blue glow can drift independently. */
-  .shot-wrap::after {
-    content: "";
-    position: absolute;
-    inset: -200px;
-    z-index: -1;
-    pointer-events: none;
-    background: radial-gradient(520px 140px at 50% calc(100% - 200px), rgb(143 162 255 / 0.19), transparent 100%);
-  }
-  /* The same glows in other palette colours. Hidden unless motion is on. */
-  .glow-shift {
-    position: absolute;
-    inset: -200px;
-    z-index: -1;
-    pointer-events: none;
-    opacity: 0;
-  }
-  .glow-shift-a {
-    background:
-      radial-gradient(190px 380px at 200px calc(200px + (100% - 400px) * 0.55), rgb(143 162 255 / 0.18), transparent 100%),
-      radial-gradient(160px 280px at calc(100% - 200px) calc(200px + (100% - 400px) * 0.25), rgb(110 231 200 / 0.12), transparent 100%);
-  }
-  .glow-shift-b {
-    background: radial-gradient(520px 140px at 50% calc(100% - 200px), rgb(183 155 255 / 0.2), transparent 100%);
-  }
   .shot {
     border-radius: var(--r-2xl);
     background: var(--bg-surface);
@@ -400,6 +389,9 @@ const labels: [string, number, number][] = [
     fill: var(--text-primary);
     font-family: var(--font-mono);
     font-size: 12px;
+  }
+  .graph text.quiet {
+    fill: var(--text-secondary);
   }
   .legend {
     display: flex;

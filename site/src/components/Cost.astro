@@ -212,7 +212,6 @@ const sourceOf: Record<string, string> = Object.fromEntries(
     display: block;
     height: 8px;
     border-radius: 1px;
-    transition: width 160ms ease;
   }
   .low {
     background: color-mix(in srgb, var(--text-muted) 55%, transparent);
@@ -266,6 +265,7 @@ const sourceOf: Record<string, string> = Object.fromEntries(
     line-height: 42px;
     letter-spacing: -0.72px;
     color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
     white-space: nowrap;
   }
   .cap {

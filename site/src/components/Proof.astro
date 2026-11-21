@@ -15,7 +15,7 @@ const lines: [string, boolean][] = [
 <section class="section bg-canvas" aria-labelledby="proof-title">
   <div class="inner cols">
     <figure class="card">
-      <pre><code>{lines.map(([text, comment]) => <span class:list={{ c: comment }}>{text || " "}</span>)}</code></pre>
+      <pre><code class="lines">{lines.map(([text, comment], n) => <span class:list={{ c: comment }} style={`--n:${n}`}>{text || " "}</span>)}</code></pre>
       <figcaption class="result"><span class="fail">FAIL</span>expected 0 rows, received 1 &nbsp;·&nbsp; finding kept at P1</figcaption>
     </figure>
 

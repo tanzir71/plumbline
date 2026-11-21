@@ -3,6 +3,7 @@ import check from "../assets/figma/check.svg?url";
 import arrow from "../assets/figma/bridge-arrow.svg?url";
 import GapNote from "./GapNote.astro";
 import SectionHead from "./SectionHead.astro";
+import Signal from "./Signal.astro";
 
 const diff: [string, "muted" | "add" | "plain"][] = [
   ["@@ billing/invoice.ts @@", "muted"],
@@ -14,6 +15,10 @@ const diff: [string, "muted" | "add" | "plain"][] = [
   ["    const limits = planLimits(org.plan);", "plain"],
   ["    ...", "plain"],
 ];
+
+const EDGE_LEFT = "M108 100V124";
+const EDGE_RIGHT = "M396 100V124";
+const EDGE_NEW = "M196 81H306";
 
 const nodes: [string, number, number, boolean][] = [
   ["invoice.ts", 108, 81, false],
@@ -51,17 +56,24 @@ const nodes: [string, number, number, boolean][] = [
         <div class="top">
           <h3 class="micro">WHAT ACTUALLY CHANGED</h3>
           <svg class="drawing" width="504" height="196" viewBox="0 0 504 196" fill="none" role="img" aria-label="Two deploy units, billing and users. A new import from invoice.ts in billing to session.ts in users crosses the boundary between them.">
-            <rect x="0" y="0" width="216" height="196" rx="10" fill="#181D24"></rect>
-            <rect x="288" y="0" width="216" height="196" rx="10" fill="#181D24"></rect>
-            <path d="M108 98V126" stroke="#353C46" stroke-width="1.5"></path>
-            <path d="M396 98V126" stroke="#353C46" stroke-width="1.5"></path>
-            <path class="edge-solid" d="M194 81H306" stroke="#FF6B81" stroke-width="2"></path>
-            <path class="edge-solid" d="M307 81L299.5 76.5M307 81L299.5 85.5" stroke="#FF6B81" stroke-width="2"></path>
-            <circle class="edge-dot" cx="202" cy="81" r="3" fill="#FF6B81" style="--run: 90px"></circle>
-            <rect x="22" y="64" width="172" height="34" rx="6" fill="#232A33"></rect>
-            <rect x="22" y="126" width="172" height="34" rx="6" fill="#232A33"></rect>
-            <rect x="310" y="64" width="172" height="34" rx="6" fill="#232A33"></rect>
-            <rect x="310" y="126" width="172" height="34" rx="6" fill="#232A33"></rect>
+            <rect x="0" y="0" width="216" height="196" rx="10" fill="#1F2124"></rect>
+            <rect x="288" y="0" width="216" height="196" rx="10" fill="#1F2124"></rect>
+            <g stroke="#3A3D43" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d={EDGE_LEFT}></path>
+              <path d="M103.5 119.5L108 124L112.5 119.5"></path>
+              <path d={EDGE_RIGHT}></path>
+              <path d="M391.5 119.5L396 124L400.5 119.5"></path>
+            </g>
+            <path class="edge-solid" d={EDGE_NEW} stroke="#FF6B81" stroke-width="2" stroke-linecap="round"></path>
+            <path class="edge-solid" d="M300.5 75.5L306 81L300.5 86.5" stroke="#FF6B81" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+            <Signal d={EDGE_LEFT} at={0.2} />
+            <Signal d={EDGE_NEW} at={1.1} tone="red" />
+            <Signal d={EDGE_RIGHT} at={2.6} />
+            <Signal d={EDGE_NEW} at={5.1} tone="red" />
+            <rect x="22" y="64" width="172" height="34" rx="8" fill="#2A2C31"></rect>
+            <rect x="22" y="126" width="172" height="34" rx="8" fill="#2A2C31"></rect>
+            <rect x="310" y="64" width="172" height="34" rx="8" fill="#2A2C31"></rect>
+            <rect x="310" y="126" width="172" height="34" rx="8" fill="#2A2C31"></rect>
             <text class="zone" x="16" y="22" dominant-baseline="central">DEPLOY UNIT · billing</text>
             <text class="zone" x="304" y="22" dominant-baseline="central">DEPLOY UNIT · users</text>
             {nodes.map(([t, x, y, red]) => <text class:list={["node", { red }]} x={x} y={y} text-anchor="middle" dominant-baseline="central">{t}</text>)}

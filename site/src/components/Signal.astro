@@ -1,0 +1,47 @@
+---
+/**
+ * A soft gradient that travels along a diagram edge, including around its corners.
+ * Soft light moves along the path and shows only through the shape of the line,
+ * so it can't leave the line. The edge itself is drawn separately and never animates.
+ * Motion is in styles/motion.css. Without it, nothing here is visible.
+ */
+interface Props {
+  /** The edge's path data. It must match the drawn edge exactly. */
+  d: string;
+  /** Seconds into the diagram's loop when the gradient sets off. */
+  at: number;
+  tone?: "plain" | "red";
+}
+const { d, at, tone = "plain" } = Astro.props;
+
+const COLOURS = {
+  plain: { body: "#8B9099", head: "#A8ADB5" },
+  red: { body: "#FF6B81", head: "#FF9AAA" },
+};
+const { body, head } = COLOURS[tone];
+const width = tone === "red" ? 2 : 1.5;
+const key = `${d}-${at}`.replace(/[^A-Za-z0-9]+/g, "-");
+const motion = `offset-path:path('${d}');--at:${at}s`;
+---
+
+<g class:list={["signal", tone]}>
+  <defs>
+    <mask id={`line-${key}`} maskUnits="userSpaceOnUse" x="0" y="0" width="520" height="300">
+      <path d={d} fill="none" stroke="#fff" stroke-width={width}></path>
+    </mask>
+    <radialGradient id={`tail-${key}`}>
+      <stop offset="0" stop-color={body} stop-opacity="0.2"></stop>
+      <stop offset="0.5" stop-color={body} stop-opacity="0.08"></stop>
+      <stop offset="1" stop-color={body} stop-opacity="0"></stop>
+    </radialGradient>
+    <radialGradient id={`head-${key}`}>
+      <stop offset="0" stop-color={head} stop-opacity="0.26"></stop>
+      <stop offset="0.5" stop-color={head} stop-opacity="0.11"></stop>
+      <stop offset="1" stop-color={head} stop-opacity="0"></stop>
+    </radialGradient>
+  </defs>
+  <g mask={`url(#line-${key})`}>
+    <circle class="spot tail" r="84" fill={`url(#tail-${key})`} style={`${motion};--lag:140ms`}></circle>
+    <circle class="spot head" r="44" fill={`url(#head-${key})`} style={`${motion};--lag:0ms`}></circle>
+  </g>
+</g>

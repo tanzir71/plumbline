@@ -129,6 +129,7 @@ const tabs = [
     overflow: hidden;
   }
   .tabs {
+    position: relative;
     display: flex;
     align-items: flex-end;
     gap: 32px;
@@ -136,6 +137,21 @@ const tabs = [
     background: var(--bg-raised);
     overflow-x: auto;
     scrollbar-width: none;
+  }
+  /* One indicator slides between tabs. Without JavaScript, the selected tab keeps its own rule. */
+  .tabs[data-slide]::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 1px;
+    height: 2px;
+    background: var(--accent-plumb);
+    transform-origin: left;
+    transform: translateX(var(--x, 0)) scaleX(var(--w, 0));
+  }
+  .tabs[data-slide] [role="tab"][aria-selected="true"] {
+    border-bottom-color: transparent;
   }
   [role="tab"] {
     flex: none;
@@ -284,6 +300,14 @@ const tabs = [
 <script>
   for (const root of document.querySelectorAll<HTMLElement>("[data-tabs]")) {
     const tabs = [...root.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
+    const list = root.querySelector<HTMLElement>('[role="tablist"]');
+
+    const placeIndicator = () => {
+      const on = tabs.find((t) => t.getAttribute("aria-selected") === "true");
+      if (!on || !list) return;
+      list.style.setProperty("--x", `${on.offsetLeft}px`);
+      list.style.setProperty("--w", String(on.offsetWidth));
+    };
 
     const select = (tab: HTMLButtonElement, focus: boolean) => {
       for (const t of tabs) {
@@ -293,8 +317,16 @@ const tabs = [
         const panel = document.getElementById(t.getAttribute("aria-controls") ?? "");
         if (panel) panel.hidden = !on;
       }
+      placeIndicator();
       if (focus) tab.focus();
     };
+
+    if (list) {
+      placeIndicator();
+      list.dataset.slide = "";
+      new ResizeObserver(placeIndicator).observe(list);
+      document.fonts?.ready.then(placeIndicator);
+    }
 
     tabs.forEach((tab, i) => {
       tab.addEventListener("click", () => select(tab, false));

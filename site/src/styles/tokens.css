@@ -1,21 +1,21 @@
 :root {
   color-scheme: dark;
 
-  --bg-canvas: #0a0c0f;
-  --bg-surface: #11151a;
-  --bg-raised: #181d24;
-  --bg-inset: #0d1014;
+  --bg-canvas: #121315;
+  --bg-surface: #18191c;
+  --bg-raised: #1f2124;
+  --bg-inset: #0e0f11;
   --text-primary: #edf0f3;
-  --text-secondary: #a2aab5;
-  --text-muted: #7e8793; /* AA on canvas, surface and raised */
+  --text-secondary: #a8adb5;
+  --text-muted: #8b9099; /* AA on canvas, surface, raised and inset */
   --accent-plumb: #6ee7c8;
   --accent-on-plumb: #04221b;
   --sev-p0: #ff6b81;
   --sev-p1: #b79bff;
   --sev-p2: #7aa7ff;
   --sev-p3: #8a939e;
-  --line-subtle: #1c2129;
-  --line-edge: #353c46; /* rules at 60% opacity, rails, graph edges, leaders */
+  --line-subtle: #232529;
+  --line-edge: #3a3d43; /* rules at 60% opacity, rails, graph edges, leaders */
   --rule: color-mix(in srgb, var(--line-edge) 60%, transparent);
 
   /* tints: color-mix(in srgb, <color> N%, transparent) */
@@ -35,6 +35,7 @@
   --section-y: 88px;
   --font-sans: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "Geist Mono", "Geist Mono Fallback", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @media (max-width: 1279px) {

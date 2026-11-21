@@ -73,6 +73,26 @@ test.describe("structure", () => {
     expect(og.ok()).toBe(true);
   });
 
+  for (const path of [HOME, `${HOME}docs/`, `${HOME}changelog/`, `${HOME}no-such-page/`]) {
+    test(`favicons load on ${path}`, async ({ page }) => {
+      await page.goto(path);
+      const icons = await page.locator('link[rel="icon"], link[rel="apple-touch-icon"]').evaluateAll((els) =>
+        els.map((el) => (el as HTMLLinkElement).href),
+      );
+      expect(icons).toHaveLength(3);
+      const types: string[] = [];
+      for (const href of icons) {
+        expect(new URL(href).pathname.startsWith(HOME), href).toBe(true);
+        const res = await page.request.get(href);
+        expect(res.ok(), href).toBe(true);
+        expect((await res.body()).length, href).toBeGreaterThan(100);
+        types.push(res.headers()["content-type"] ?? "");
+      }
+      expect(types.join(" ")).toContain("svg");
+      expect(types.join(" ")).toContain("png");
+    });
+  }
+
   test("footer credits tanziro.com", async ({ page }) => {
     await page.goto(HOME);
     await expect(page.locator("footer .bottom a")).toHaveAttribute("href", "https://tanziro.com");
@@ -101,8 +121,8 @@ test.describe("structure", () => {
     await page.goto(HOME);
     const bad = await page.evaluate(() =>
       [...document.querySelectorAll<HTMLElement>("body *")]
-        // The colour-shift layers are background glow, and may only sit behind the two glow panels.
-        .filter((el) => !(el.classList.contains("glow-shift") && el.parentElement?.matches(".shot-wrap, .box-wrap")))
+        // The mesh is the one background layer allowed to use gradients.
+        .filter((el) => !el.closest(".glow-mesh"))
         .filter((el) => {
           const s = getComputedStyle(el);
           return s.backgroundImage.includes("gradient") || s.boxShadow !== "none" || s.textShadow !== "none";
@@ -114,12 +134,15 @@ test.describe("structure", () => {
 
   test("glow appears only behind the hero shot and the teams box", async ({ page }) => {
     await page.goto(HOME);
-    const glows = await page.evaluate(() =>
-      [...document.querySelectorAll<HTMLElement>("body *")]
-        .filter((el) => getComputedStyle(el, "::before").backgroundImage.includes("radial-gradient"))
-        .map((el) => el.classList[0]),
-    );
-    expect(glows.sort()).toEqual(["box-wrap", "shot-wrap"]);
+    const { hosts, stray } = await page.evaluate(() => ({
+      hosts: [...document.querySelectorAll<HTMLElement>(".glow-mesh")].map((el) => el.parentElement?.classList[0]),
+      stray: [...document.querySelectorAll<HTMLElement>("body *")]
+        .filter((el) => !el.closest(".glow-mesh, .pipeline, .path"))
+        .filter((el) => ["::before", "::after"].some((p) => getComputedStyle(el, p).backgroundImage.includes("gradient")))
+        .map((el) => el.className || el.tagName),
+    }));
+    expect(hosts.sort()).toEqual(["box-wrap", "shot-wrap"]);
+    expect(stray).toEqual([]);
   });
 
   test("cards, panels, buttons and the nav have no strokes", async ({ page }) => {
@@ -151,7 +174,7 @@ test.describe("motion", () => {
   test("the glows and all four diagrams animate", async ({ page }) => {
     await page.goto(HOME);
     const names = new Set((await running(page)).map((a) => a.name));
-    for (const name of ["glow-drift-a", "glow-drift-b", "glow-shift-a", "glow-shift-b", "edge-pulse", "rail-run", "leader-run", "rail-marker", "egress-drop"]) {
+    for (const name of ["mesh-orbit", "mesh-sway", "mesh-turn", "mesh-stretch", "mesh-colour", "beam-run", "beam-x", "beam-y"]) {
       expect(names, name).toContain(name);
     }
   });
@@ -173,46 +196,103 @@ test.describe("motion", () => {
     }
   });
 
-  test("the travelling dots stay on their lines", async ({ page }) => {
+  test("the line gradients run exactly along their lines", async ({ page }) => {
     await page.goto(HOME);
     const out = await page.evaluate(() => {
-      const results: string[] = [];
-      for (const dot of document.querySelectorAll<SVGCircleElement>(".edge-dot")) {
-        const run = parseFloat(dot.style.getPropertyValue("--run"));
-        const start = dot.cx.baseVal.value;
-        const line = dot.parentElement?.querySelector<SVGPathElement>("path.edge-solid[d^='M1']");
-        const end = line ? start + run : 0;
-        if (!(run > 0) || end + dot.r.baseVal.value > (dot.closest("svg.graph") ? 251.5 : 299.5)) results.push(`${start}+${run}`);
+      const signals = [...document.querySelectorAll<SVGGElement>("g.signal")];
+      const off: string[] = [];
+      for (const signal of signals) {
+        const d = signal.querySelector("mask path")!.getAttribute("d")!;
+        const drawn = [...signal.ownerSVGElement!.querySelectorAll("path")].filter((p) => !p.closest("mask"));
+        const spots = [...signal.querySelectorAll<SVGElement>(".spot")];
+        if (!drawn.some((p) => p.getAttribute("d") === d)) off.push(`no drawn edge for ${d}`);
+        if (spots.length !== 2 || spots.some((s) => getComputedStyle(s).offsetPath === "none" || !s.getAttribute("style")!.includes(d))) off.push(`spots off ${d}`);
       }
-      return results;
+      return { count: signals.length, off, dots: document.querySelectorAll(".pulse, .edge-dot, .ripple").length };
     });
-    expect(out).toEqual([]);
+    expect(out).toEqual({ count: 10, off: [], dots: 0 });
   });
 
-  test("the glows change between cool palette colours and stay behind their panels", async ({ page }) => {
+  test("the mesh changes between cool palette colours and stays behind its panel", async ({ page }) => {
     await page.goto(HOME);
-    const layers = await page.evaluate(() =>
-      [...document.querySelectorAll<HTMLElement>(".glow-shift")].map((el) => {
-        const panel = el.parentElement?.querySelector(".shot, .box") as HTMLElement;
+    const meshes = await page.evaluate(() =>
+      [...document.querySelectorAll<HTMLElement>(".glow-mesh")].map((mesh) => {
+        const panel = mesh.parentElement?.querySelector(".shot, .box") as HTMLElement;
+        const colours = [...mesh.querySelectorAll(".lobe")].map((lobe) => {
+          const m = getComputedStyle(lobe).backgroundImage.match(/rgba?\((\d+), (\d+), (\d+)/);
+          return m ? `${m[1]},${m[2]},${m[3]}` : "none";
+        });
         return {
-          z: getComputedStyle(el).zIndex,
-          before: Boolean(el.compareDocumentPosition(panel) & Node.DOCUMENT_POSITION_FOLLOWING),
-          colours: [...getComputedStyle(el).backgroundImage.matchAll(/rgba?\((\d+), (\d+), (\d+)/g)].map((m) => `${m[1]},${m[2]},${m[3]}`),
+          z: getComputedStyle(mesh).zIndex,
+          before: Boolean(mesh.compareDocumentPosition(panel) & Node.DOCUMENT_POSITION_FOLLOWING),
+          panelBackground: getComputedStyle(panel).backgroundColor,
+          colours,
         };
       }),
     );
-    expect(layers).toHaveLength(4);
-    const palette = new Set(["110,231,200", "143,162,255", "183,155,255", "0,0,0"]);
-    for (const layer of layers) {
-      expect(layer.z).toBe("-1");
-      expect(layer.before).toBe(true);
-      for (const colour of layer.colours) expect(palette, colour).toContain(colour);
+    expect(meshes).toHaveLength(2);
+    const palette = ["110,231,200", "143,162,255", "183,155,255"];
+    for (const mesh of meshes) {
+      expect(mesh.z).toBe("-1");
+      expect(mesh.before).toBe(true);
+      expect(mesh.panelBackground).toMatch(/^rgb\(/);
+      expect(new Set(mesh.colours)).toEqual(new Set(palette));
+    }
+  });
+
+  test("the light stays in a tight halo around each box", async ({ page }) => {
+    await page.goto(HOME);
+    const past = await page.evaluate(() =>
+      [...document.querySelectorAll<HTMLElement>(".glow-mesh")].map((mesh) => {
+        const box = mesh.getBoundingClientRect();
+        const field = mesh.querySelector(".field")!.getBoundingClientRect();
+        return Math.max(box.top - field.top, field.right - box.right, field.bottom - box.bottom, box.left - field.left);
+      }),
+    );
+    expect(past).toHaveLength(2);
+    for (const px of past) expect(px).toBeLessThanOrEqual(92);
+  });
+
+  test("the mesh travels around all four edges of each box", async ({ page }) => {
+    await page.goto(HOME);
+    const meshes = await page.evaluate(() =>
+      [...document.querySelectorAll<HTMLElement>(".glow-mesh")].map((mesh) => {
+        const blob = mesh.querySelector<HTMLElement>(".blob")!;
+        const orbit = blob.getAnimations().find((a) => (a as CSSAnimation).animationName === "mesh-orbit")!;
+        orbit.pause();
+        const duration = orbit.effect!.getComputedTiming().duration as number;
+        const box = mesh.getBoundingClientRect();
+        const inset = parseFloat(getComputedStyle(mesh).getPropertyValue("--inset"));
+        const sides = new Set<string>();
+        let offEdge = 0;
+        for (let i = 0; i < 64; i++) {
+          orbit.currentTime = (duration * i) / 64;
+          const r = blob.getBoundingClientRect();
+          const x = r.left + r.width / 2 - box.left;
+          const y = r.top + r.height / 2 - box.top;
+          const on = [
+            Math.abs(y - inset) < 2 && "top",
+            Math.abs(x - (box.width - inset)) < 2 && "right",
+            Math.abs(y - (box.height - inset)) < 2 && "bottom",
+            Math.abs(x - inset) < 2 && "left",
+          ].filter(Boolean) as string[];
+          if (on.length === 0) offEdge++;
+          on.forEach((side) => sides.add(side));
+        }
+        orbit.play();
+        return { sides: [...sides].sort(), offEdge };
+      }),
+    );
+    expect(meshes).toHaveLength(2);
+    for (const mesh of meshes) {
+      expect(mesh.sides).toEqual(["bottom", "left", "right", "top"]);
+      expect(mesh.offEdge).toBe(0);
     }
   });
 
   test("animates only cheap properties, so it cannot shift the layout", async ({ page }) => {
     await page.goto(HOME);
-    const allowed = new Set(["transform", "opacity"]);
+    const allowed = new Set(["transform", "opacity", "translate", "rotate", "scale", "filter", "offsetDistance"]);
     for (const a of await running(page)) {
       if (!a.name) continue;
       for (const prop of a.props) expect(allowed, `${a.name}: ${prop}`).toContain(prop);
@@ -225,9 +305,33 @@ test.describe("motion", () => {
     await toggle.focus();
     await page.keyboard.press("Space");
     await expect(page.locator(".motion-toggle")).toContainText("Play motion");
-    await expect.poll(async () => (await running(page)).filter((a) => a.name.includes("glow") && a.state === "running").length).toBe(0);
+    await expect.poll(async () => (await running(page)).filter((a) => a.name.includes("mesh") && a.state === "running").length).toBe(0);
     await page.keyboard.press("Space");
-    await expect.poll(async () => (await running(page)).filter((a) => a.name.includes("glow") && a.state === "running").length).toBeGreaterThan(0);
+    await expect.poll(async () => (await running(page)).filter((a) => a.name.includes("mesh") && a.state === "running").length).toBeGreaterThan(0);
+  });
+
+  test("scroll reveals finish in view, and pausing never leaves content hidden", async ({ page }) => {
+    await page.goto(HOME);
+    const panel = page.locator("#install .panel");
+    await panel.scrollIntoViewIfNeeded();
+    await page.evaluate(() => window.scrollBy({ top: 240, behavior: "instant" }));
+    await expect.poll(() => panel.evaluate((el) => getComputedStyle(el).opacity)).toBe("1");
+
+    await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
+    await page.getByRole("checkbox", { name: "Pause motion" }).check({ force: true });
+    await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
+    await expect.poll(() => panel.evaluate((el) => getComputedStyle(el).opacity)).toBe("1");
+  });
+
+  test("the tab indicator follows the selected tab", async ({ page }) => {
+    await page.goto(HOME);
+    const list = page.getByRole("tablist", { name: "Install options" });
+    const offset = () => list.evaluate((el) => parseFloat(el.style.getPropertyValue("--x")));
+    const first = await offset();
+    await page.getByRole("tab", { name: "GitLab CI" }).click();
+    const tabLeft = await page.getByRole("tab", { name: "GitLab CI" }).evaluate((el) => (el as HTMLElement).offsetLeft);
+    expect(await offset()).toBe(tabLeft);
+    expect(tabLeft).toBeGreaterThan(first);
   });
 
   test.describe("with reduced motion", () => {
@@ -237,11 +341,14 @@ test.describe("motion", () => {
       await page.goto(HOME);
       expect((await running(page)).filter((a) => a.name)).toEqual([]);
       await expect(page.locator(".motion-toggle")).toBeHidden();
-      for (const layer of await page.locator(".glow-shift").all()) {
-        expect(await layer.evaluate((el) => getComputedStyle(el).opacity)).toBe("0");
+      for (const blob of await page.locator(".glow-mesh .blob").all()) {
+        expect(await blob.evaluate((el) => getComputedStyle(el).transform)).toMatch(/^matrix/);
       }
-      for (const dot of await page.locator(".edge-dot").all()) {
-        expect(await dot.evaluate((el) => getComputedStyle(el).opacity)).toBe("0");
+      for (const lobe of await page.locator(".glow-mesh .lobe").all()) {
+        expect(await lobe.evaluate((el) => getComputedStyle(el).opacity)).toBe("1");
+      }
+      for (const spot of await page.locator(".signal .spot").all()) {
+        expect(await spot.evaluate((el) => getComputedStyle(el).opacity)).toBe("0");
       }
     });
   });
