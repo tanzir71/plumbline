@@ -1,0 +1,8 @@
+version: 1
+modules:
+  invoices: ["src/invoices/**"]
+rules:
+  - id: expand-contract
+    require: "schema changes follow expand, migrate, contract so a rolling deploy keeps working"
+    check: llm
+    paths: ["migrations/**"]

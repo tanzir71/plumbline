@@ -1,0 +1,19 @@
+{
+  "cycle": [
+    "src/billing/plans.ts",
+    "src/users/session/index.ts",
+    "src/billing/plans.ts"
+  ],
+  "moduleCycle": [
+    "billing",
+    "users/session",
+    "billing"
+  ],
+  "findings": [
+    {
+      "lens": "L02",
+      "severity": "P1",
+      "proof": "graph_diff"
+    }
+  ]
+}

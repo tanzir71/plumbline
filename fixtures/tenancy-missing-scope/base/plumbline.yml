@@ -1,0 +1,12 @@
+version: 1
+modules:
+  repo: ["src/repo/**"]
+  store: ["src/store/**"]
+layers:
+  - [repo]
+  - [store]
+rules:
+  - id: tenant-scope
+    require: "repository methods scope queries by org_id"
+    check: llm
+    paths: ["src/repo/**"]

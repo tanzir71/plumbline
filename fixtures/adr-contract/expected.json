@@ -1,0 +1,12 @@
+{
+  "init": {
+    "modules": [
+      "api",
+      "billing",
+      "orgs",
+      "db"
+    ],
+    "forbid": "billing -> orgs"
+  },
+  "findings": []
+}

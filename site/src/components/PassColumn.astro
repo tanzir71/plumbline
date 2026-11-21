@@ -1,0 +1,151 @@
+---
+interface Props {
+  num: string;
+  kind: string;
+  title: string;
+  desc: string;
+  last?: boolean;
+}
+const { num, kind, title, desc, last = false } = Astro.props;
+---
+
+<li class:list={["pass", { last }]}>
+  <div class="top">
+    <p class="label"><span class="n">PASS {num}</span><span class="k">{kind}</span></p>
+    <h3>{title}</h3>
+    <p class="desc">{desc}</p>
+  </div>
+  <div class="rail" aria-hidden="true"><i class="marker"></i><i class="line"></i></div>
+  <div class="leader" aria-hidden="true"></div>
+  <div class="artifact-wrap"><pre class="artifact"><slot /></pre></div>
+</li>
+
+<style>
+  .pass {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .top {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    height: 138px;
+    padding: 0 32px 28px 0;
+    overflow: hidden;
+  }
+  .label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 16px;
+  }
+  .n {
+    color: var(--accent-plumb);
+    font-weight: 500;
+    letter-spacing: 0.96px;
+  }
+  .k {
+    color: var(--text-muted);
+  }
+  h3 {
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 24px;
+    letter-spacing: -0.18px;
+    color: var(--text-primary);
+  }
+  .desc {
+    font-size: 13px;
+    line-height: 20px;
+    color: var(--text-secondary);
+  }
+  .rail {
+    display: flex;
+    align-items: center;
+    height: 9px;
+  }
+  .marker {
+    flex: none;
+    width: 9px;
+    height: 9px;
+    border-radius: 2px;
+    background: var(--accent-plumb);
+  }
+  .line {
+    flex: 1;
+    height: 1px;
+    background: var(--line-edge);
+  }
+  .last .line {
+    display: none;
+  }
+  .leader {
+    width: 1px;
+    height: 28px;
+    margin-left: 4px;
+    background: var(--line-edge);
+  }
+  .artifact-wrap {
+    padding-right: 24px;
+  }
+  .artifact {
+    padding: 16px;
+    border-radius: 0 var(--r-md) var(--r-md) var(--r-md);
+    background: var(--bg-inset);
+    color: var(--text-secondary);
+    font-size: 12px;
+    line-height: 20px;
+    overflow-x: auto;
+  }
+
+  @media (max-width: 1279px) {
+    /* Each pair of columns gets its own rail. */
+    .pass:nth-child(2) .line {
+      display: none;
+    }
+    .pass:nth-child(3) .line {
+      display: block;
+    }
+  }
+  @media (max-width: 767px) {
+    .pass {
+      position: relative;
+      padding: 0 0 32px 24px;
+    }
+    .pass::before {
+      content: "";
+      position: absolute;
+      left: 4px;
+      top: 4px;
+      bottom: -4px;
+      width: 1px;
+      background: var(--line-edge);
+    }
+    .pass.last::before {
+      bottom: auto;
+      height: 100%;
+    }
+    .rail {
+      position: absolute;
+      left: 0;
+      top: 2px;
+    }
+    .pass .line,
+    .leader {
+      display: none !important;
+    }
+    .top {
+      height: auto;
+      padding: 0 0 14px;
+    }
+    .artifact-wrap {
+      padding-right: 0;
+    }
+    .artifact {
+      border-radius: var(--r-md);
+    }
+  }
+</style>

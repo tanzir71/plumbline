@@ -1,0 +1,13 @@
+{
+  "ruleIds": [
+    "layers:db->api",
+    "no-db-to-api"
+  ],
+  "findings": [
+    {
+      "lens": "L02",
+      "severity": "P1",
+      "proof": "broken_rule"
+    }
+  ]
+}

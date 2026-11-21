@@ -1,0 +1,100 @@
+---
+interface Props {
+  id: string;
+  num: string;
+  label: string;
+  lines: string[];
+  lead?: string;
+}
+const { id, num, label, lines, lead } = Astro.props;
+---
+
+<div class="head">
+  <div class="title">
+    <p class="eyebrow"><span class="num">{num}</span><span class="label">{label}</span></p>
+    <h2 id={id}>{lines.map((line) => <span>{line}</span>)}</h2>
+  </div>
+  <div class="aside">
+    {lead && <p class="lead">{lead}</p>}
+    <slot />
+  </div>
+</div>
+
+<style>
+  .head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 40px;
+  }
+  .title {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 620px;
+  }
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 16px;
+  }
+  .num {
+    color: var(--accent-plumb);
+  }
+  .label {
+    color: var(--text-muted);
+    letter-spacing: 0.96px;
+    text-transform: uppercase;
+  }
+  h2 {
+    font-size: 32px;
+    font-weight: 600;
+    line-height: 38px;
+    letter-spacing: -0.64px;
+    color: var(--text-primary);
+  }
+  h2 span {
+    display: block;
+  }
+  .aside {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+    width: 460px;
+    flex: none;
+  }
+  .lead {
+    font-size: 15px;
+    line-height: 24px;
+    color: var(--text-secondary);
+  }
+
+  @media (max-width: 1279px) {
+    .head {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 16px;
+    }
+    .aside {
+      width: 100%;
+      max-width: 620px;
+    }
+  }
+  @media (max-width: 1023px) {
+    h2 {
+      font-size: 28px;
+      line-height: 34px;
+    }
+  }
+  @media (max-width: 767px) {
+    h2 {
+      font-size: 26px;
+      line-height: 32px;
+    }
+  }
+</style>

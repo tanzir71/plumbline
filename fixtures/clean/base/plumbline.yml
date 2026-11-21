@@ -1,0 +1,13 @@
+version: 1
+modules:
+  api: ["src/api/**"]
+  db: ["src/db/**"]
+layers:
+  - [api]
+  - [db]
+rules:
+  - id: no-db-to-api
+    forbid: db -> api
+gate:
+  - branches: ["main"]
+    min_merge_score: 3

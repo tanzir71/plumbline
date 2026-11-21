@@ -1,0 +1,22 @@
+---
+import Prose from "../../layouts/Prose.astro";
+import { docs } from "../../lib/content";
+
+export function getStaticPaths() {
+  const all = docs();
+  return all.filter((d) => d.slug !== "index").map((page) => ({ params: { slug: page.slug }, props: { page, all } }));
+}
+
+const { page, all } = Astro.props;
+---
+
+<Prose
+  title={`${page.title} — Plumbline docs`}
+  description={page.description}
+  canonicalPath={`docs/${page.slug}/`}
+  heading={page.title}
+  nav={all}
+  current={page.slug}
+>
+  <Fragment set:html={page.html} />
+</Prose>

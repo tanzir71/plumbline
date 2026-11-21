@@ -1,0 +1,175 @@
+---
+import check from "../assets/figma/check-accent-16.svg?url";
+import snippets from "../data/snippets.json";
+
+/** Colours YAML keys and comments. The text comes from the snippet a test validates against the schema. */
+function highlight(yaml: string): string {
+  const esc = (s: string) => s.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+  return yaml
+    .trimEnd()
+    .split("\n")
+    .map((line) => {
+      const hash = line.search(/\s#\s/);
+      const code = hash === -1 ? line : line.slice(0, hash);
+      const comment = hash === -1 ? "" : line.slice(hash);
+      const keyed = esc(code).replace(/^(\s*(?:-\s+)?)([\w/-]+)(:)/, '$1<span class="k">$2</span>$3');
+      return keyed + (comment ? `<span class="c">${esc(comment)}</span>` : "");
+    })
+    .join("\n");
+}
+
+const bullets = [
+  "Mined from ADRs, AGENTS.md, CLAUDE.md and past PR threads",
+  "Deterministic checks first, the model only where it has to judge",
+  "One contract shared across every repo that imports it",
+];
+---
+
+<section class="section bg-surface" aria-labelledby="contract-title">
+  <div class="inner cols">
+    <div class="copy">
+      <div class="header">
+        <p class="eyebrow"><span>05</span>&nbsp;&nbsp;ARCHITECTURE CONTRACT</p>
+        <h2 id="contract-title">Write the architecture down once.</h2>
+        <p class="lead">Plumbline mines your ADRs and agent rule files into plumbline.yml, then checks every PR against it. Rules it can prove run on the dependency-cruiser import graph. Only judgement calls go to the model.</p>
+      </div>
+      <ul>
+        {bullets.map((b) => <li><img src={check} alt="" width="16" height="16" />{b}</li>)}
+      </ul>
+    </div>
+
+    <figure class="card">
+      <figcaption>plumbline.yml</figcaption>
+      <pre><code set:html={highlight(snippets.contract)} /></pre>
+    </figure>
+  </div>
+</section>
+
+<style>
+  .cols {
+    display: flex;
+    align-items: center;
+    gap: 64px;
+  }
+  .copy {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    flex: none;
+    width: 520px;
+  }
+  .header {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .eyebrow {
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 16px;
+    letter-spacing: 0.96px;
+  }
+  .eyebrow span {
+    color: var(--accent-plumb);
+  }
+  h2 {
+    font-size: 32px;
+    font-weight: 600;
+    line-height: 38px;
+    letter-spacing: -0.64px;
+  }
+  .lead {
+    font-size: 15px;
+    line-height: 24px;
+    color: var(--text-secondary);
+  }
+  ul {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 16px;
+    line-height: 21px;
+    color: var(--text-primary);
+  }
+  li img {
+    flex: none;
+  }
+  .card {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 24px;
+    border-radius: var(--r-xl);
+    background: var(--bg-inset);
+  }
+  figcaption {
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 16px;
+  }
+  pre {
+    overflow-x: auto;
+    color: var(--text-primary);
+    font-size: 13px;
+    line-height: 21px;
+  }
+  pre :global(.k) {
+    color: var(--accent-plumb);
+  }
+  pre :global(.c) {
+    color: var(--text-muted);
+  }
+
+  @media (max-width: 1279px) {
+    .cols {
+      gap: 40px;
+    }
+    .copy {
+      flex: 1 1 0;
+      width: auto;
+    }
+    li {
+      font-size: 15px;
+      line-height: 21px;
+    }
+  }
+  @media (max-width: 1023px) {
+    .cols {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .copy,
+    .card {
+      flex: none;
+    }
+    h2 {
+      font-size: 28px;
+      line-height: 34px;
+    }
+  }
+  @media (max-width: 767px) {
+    h2 {
+      font-size: 26px;
+      line-height: 32px;
+    }
+    .card {
+      padding: 16px;
+    }
+    li {
+      align-items: flex-start;
+    }
+    li img {
+      margin-top: 3px;
+    }
+  }
+</style>

@@ -1,0 +1,208 @@
+---
+import check from "../assets/figma/check.svg?url";
+import arrow from "../assets/figma/bridge-arrow.svg?url";
+import GapNote from "./GapNote.astro";
+import SectionHead from "./SectionHead.astro";
+
+const diff: [string, "muted" | "add" | "plain"][] = [
+  ["@@ billing/invoice.ts @@", "muted"],
+  ['  import { planLimits } from "./plans";', "plain"],
+  ['+ import { currentOrg } from "../users/session";', "add"],
+  [" ", "plain"],
+  ["  export async function createInvoice(input) {", "plain"],
+  ["+   const org = await currentOrg();", "add"],
+  ["    const limits = planLimits(org.plan);", "plain"],
+  ["    ...", "plain"],
+];
+
+const nodes: [string, number, number, boolean][] = [
+  ["invoice.ts", 108, 81, false],
+  ["plans.ts", 108, 143, false],
+  ["session.ts", 396, 81, true],
+  ["profile.ts", 396, 143, false],
+];
+---
+
+<section id="product" class="section bg-canvas" aria-labelledby="gap-title">
+  <div class="inner stack">
+    <SectionHead
+      id="gap-title"
+      num="02"
+      label="The gap"
+      lines={["Bug bots read the diff.", "Architecture lives between files."]}
+      lead="Hosted reviewers are good at regressions. What slips through is what no single line shows: an import that bends a boundary, a query that drops tenancy, a decision your team made that an agent just reversed."
+    />
+
+    <div class="compare">
+      <div class="panel diff-panel">
+        <div class="top">
+          <h3 class="micro">WHAT THE DIFF SHOWS</h3>
+          <pre class="diff"><code>{diff.map(([line, kind]) => <span class={kind}>{line}</span>)}</code></pre>
+        </div>
+        <p class="verdict neutral"><img src={check} alt="" width="14" height="14" />diff review: 0 issues &nbsp;·&nbsp; tests pass</p>
+      </div>
+
+      <div class="bridge" aria-hidden="true">
+        <span>same PR</span>
+        <img src={arrow} alt="" width="40" height="12" />
+      </div>
+
+      <div class="panel">
+        <div class="top">
+          <h3 class="micro">WHAT ACTUALLY CHANGED</h3>
+          <svg class="drawing" width="504" height="196" viewBox="0 0 504 196" fill="none" role="img" aria-label="Two deploy units, billing and users. A new import from invoice.ts in billing to session.ts in users crosses the boundary between them.">
+            <rect x="0" y="0" width="216" height="196" rx="10" fill="#181D24"></rect>
+            <rect x="288" y="0" width="216" height="196" rx="10" fill="#181D24"></rect>
+            <path d="M108 98V126" stroke="#353C46" stroke-width="1.5"></path>
+            <path d="M396 98V126" stroke="#353C46" stroke-width="1.5"></path>
+            <path d="M194 81H306" stroke="#FF6B81" stroke-width="2"></path>
+            <path d="M307 81L299.5 76.5M307 81L299.5 85.5" stroke="#FF6B81" stroke-width="2"></path>
+            <rect x="22" y="64" width="172" height="34" rx="6" fill="#232A33"></rect>
+            <rect x="22" y="126" width="172" height="34" rx="6" fill="#232A33"></rect>
+            <rect x="310" y="64" width="172" height="34" rx="6" fill="#232A33"></rect>
+            <rect x="310" y="126" width="172" height="34" rx="6" fill="#232A33"></rect>
+            <text class="zone" x="16" y="22" dominant-baseline="central">DEPLOY UNIT · billing</text>
+            <text class="zone" x="304" y="22" dominant-baseline="central">DEPLOY UNIT · users</text>
+            {nodes.map(([t, x, y, red]) => <text class:list={["node", { red }]} x={x} y={y} text-anchor="middle" dominant-baseline="central">{t}</text>)}
+            <text class="node red" x="252" y="66" text-anchor="middle" dominant-baseline="central">new</text>
+          </svg>
+        </div>
+        <p class="verdict alert"><span class="sev">P1</span>new edge crosses a deploy boundary &nbsp;·&nbsp; ADR-012</p>
+      </div>
+    </div>
+
+    <ul class="notes">
+      <GapNote num="01" title="Design intent" body="A PR reverses an ADR or a rule in AGENTS.md. Tests pass. Nobody remembers the decision was ever made." caught="caught by: contract + ADR check" />
+      <GapNote num="02" title="Pattern drift" body="Agents copy the nearest example, including the bad ones. Every PR looks fine on its own while the codebase bends." caught="caught by: convention mining" />
+      <GapNote num="03" title="Boundary erosion" body="A new import ties together two modules that were meant to stay apart. Now they can't ship separately." caught="caught by: dependency diff" />
+    </ul>
+  </div>
+</section>
+
+<style>
+  .stack {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+  .compare {
+    display: grid;
+    grid-template-columns: 560fr 80fr 560fr;
+  }
+  .panel {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-width: 0;
+    padding: 24px;
+    border-radius: var(--r-xl);
+    background: var(--bg-surface);
+  }
+  .top {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding-bottom: 28px;
+  }
+  .diff {
+    overflow-x: auto;
+    font-size: 12px;
+    line-height: 20px;
+    color: var(--text-secondary);
+  }
+  .diff code {
+    display: block;
+  }
+  .diff span {
+    display: block;
+    min-height: 20px;
+    white-space: pre;
+  }
+  .diff .muted {
+    color: var(--text-muted);
+  }
+  .diff .add {
+    color: var(--accent-plumb);
+  }
+  .verdict {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    border-radius: var(--r-md);
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 16px;
+  }
+  .neutral {
+    background: var(--bg-raised);
+  }
+  .alert {
+    background: color-mix(in srgb, var(--sev-p0) var(--tint-alert), transparent);
+  }
+  .sev {
+    flex: none;
+    color: var(--sev-p0);
+    font-weight: 500;
+  }
+  .bridge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 14px;
+  }
+  .drawing {
+    max-width: 100%;
+    height: auto;
+  }
+  .drawing text {
+    font-family: var(--font-mono);
+  }
+  .zone {
+    fill: var(--text-muted);
+    font-size: 10px;
+    letter-spacing: 0.6px;
+  }
+  .node {
+    fill: var(--text-primary);
+    font-size: 12px;
+  }
+  .node.red {
+    fill: var(--sev-p0);
+  }
+  .notes {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
+  }
+
+  @media (max-width: 1023px) {
+    .compare {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .bridge {
+      padding: 12px 0;
+    }
+    .bridge img {
+      transform: rotate(90deg);
+      margin: 14px 0;
+    }
+    .drawing {
+      align-self: center;
+    }
+  }
+  @media (max-width: 767px) {
+    .panel {
+      padding: 16px;
+    }
+    .notes {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

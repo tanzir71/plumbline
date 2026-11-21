@@ -1,0 +1,60 @@
+---
+title: CLI
+description: The deterministic commands, for any terminal or CI.
+order: 3
+---
+
+The CLI needs no model. Run it with `npx`, or install it:
+
+```bash
+npx -y @plumbline/cli --help
+npm install -D @plumbline/cli
+```
+
+The package is `@plumbline/cli` and its command is `plumbline`. The unscoped npm package named `plumbline` is an unrelated project, so **don't run `npx` with the bare name**.
+
+## Commands
+
+| Command | What it does |
+|---|---|
+| `plumbline init` | Writes a `plumbline.yml` skeleton, guessing modules from your folders |
+| `plumbline scope [target]` | Pins the diff range and collects rule files. Target: branch, commit or PR |
+| `plumbline graph --base <ref>` | Diffs the JS/TS import graph between base and HEAD |
+| `plumbline check` | Checks the contract's `forbid` and `layers` rules against the current tree |
+| `plumbline prove <test> -- <cmd>` | Runs a proof test under `.plumbline/proofs/` and records the result |
+| `plumbline report` | Applies the proof gate, scores the run and writes the audit trail |
+| `plumbline mcp` | Starts the MCP server on stdio |
+
+Every command takes `--json` for machine-readable output.
+
+## Options
+
+| Option | Commands | Meaning |
+|---|---|---|
+| `--base <ref>` | scope, graph, report | Base branch or ref. Default: `dev`, then `main`, then `master` |
+| `--gate` | report | Exit 1 when the score is below the contract's minimum |
+| `--run <id>` | report, prove | Use a specific run. Default: the latest |
+| `--findings <file>` | report | Read model findings from a file |
+| `--base-branch <name>` | report | Branch name used to match `gate` entries |
+| `--contract-from <head\|base>` | graph, report | Which commit's contract to apply. CI uses `base` |
+| `--contract <file>` | check | Validate and apply a draft contract instead of `plumbline.yml` |
+| `--semgrep` | check | Run `check: semgrep` rules, if Semgrep is installed |
+| `--allow-custom-checks` | check | Run `check: custom` commands from the contract |
+| `--passed-on-base`, `--failed-on-base` | prove | Record how the test behaved on the base commit |
+| `--force` | init | Replace an existing `plumbline.yml` |
+
+## Exit codes
+
+| Code | Meaning |
+|---|---|
+| 0 | Success |
+| 1 | An error, a failed gate, or (for `check`) a violated rule |
+| 2 | Nothing to review |
+
+## Pre-push hook
+
+```bash
+npx -y @plumbline/cli report --base main --gate
+```
+
+Without model findings, this runs the graph and rule checks only.

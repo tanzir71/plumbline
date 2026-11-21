@@ -1,0 +1,219 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://tanzir71.github.io/plumbline/schema/report.v1.json",
+  "title": "Plumbline report v1",
+  "type": "object",
+  "required": ["schemaVersion", "tool", "run", "scope", "score", "findings", "dropped", "graph", "lenses", "reviewers", "skippedRules", "gate", "lane"],
+  "additionalProperties": false,
+  "definitions": {
+    "severity": { "enum": ["P0", "P1", "P2", "P3"] },
+    "edge": {
+      "type": "object",
+      "required": ["from", "to"],
+      "properties": {
+        "from": { "type": "string" },
+        "to": { "type": "string" },
+        "typeOnly": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "proof": {
+      "type": "object",
+      "required": ["kind", "ref"],
+      "properties": {
+        "kind": { "enum": ["failing_test", "graph_diff", "broken_rule"] },
+        "ref": { "type": "string" },
+        "detail": { "type": "string" },
+        "command": { "type": "string" },
+        "exitCode": { "type": "integer" },
+        "output": { "type": "string" },
+        "passedOnBase": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "finding": {
+      "type": "object",
+      "required": ["id", "severity", "lens", "title", "body", "source"],
+      "properties": {
+        "id": { "type": "string" },
+        "severity": { "$ref": "#/definitions/severity" },
+        "lens": { "type": "string" },
+        "title": { "type": "string" },
+        "body": { "type": "string" },
+        "file": { "type": "string" },
+        "line": { "type": "integer", "minimum": 1 },
+        "endLine": { "type": "integer", "minimum": 1 },
+        "security": { "type": "boolean" },
+        "fix": { "type": "string" },
+        "proof": { "type": "array", "items": { "$ref": "#/definitions/proof" } },
+        "source": { "enum": ["deterministic", "model"] },
+        "downgradedFrom": { "$ref": "#/definitions/severity" },
+        "downgradeReason": { "type": "string" },
+        "unreachable": { "type": "boolean" },
+        "styleOnly": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "cycle": {
+      "type": "object",
+      "required": ["level", "path"],
+      "properties": {
+        "level": { "enum": ["file", "module"] },
+        "path": { "type": "array", "items": { "type": "string" }, "minItems": 2 },
+        "closedBy": { "$ref": "#/definitions/edge" }
+      },
+      "additionalProperties": false
+    },
+    "skip": {
+      "type": "object",
+      "required": ["id", "reason"],
+      "properties": { "id": { "type": "string" }, "reason": { "type": "string" } },
+      "additionalProperties": false
+    }
+  },
+  "properties": {
+    "schemaVersion": { "const": "1" },
+    "tool": {
+      "type": "object",
+      "required": ["name", "version"],
+      "properties": { "name": { "const": "plumbline" }, "version": { "type": "string" } },
+      "additionalProperties": false
+    },
+    "run": {
+      "type": "object",
+      "required": ["id", "startedAt", "finishedAt", "durationMs", "model", "mode"],
+      "properties": {
+        "id": { "type": "string" },
+        "startedAt": { "type": "string", "format": "date-time" },
+        "finishedAt": { "type": "string", "format": "date-time" },
+        "durationMs": { "type": "integer", "minimum": 0 },
+        "model": { "type": ["string", "null"] },
+        "mode": { "enum": ["deterministic", "review"] }
+      },
+      "additionalProperties": false
+    },
+    "scope": {
+      "type": "object",
+      "required": ["label", "base", "mergeBase", "head", "files", "additions", "deletions", "changedLines"],
+      "properties": {
+        "label": { "type": "string" },
+        "base": { "type": ["string", "null"] },
+        "mergeBase": { "type": "string" },
+        "head": { "type": "string" },
+        "files": { "type": "integer", "minimum": 0 },
+        "additions": { "type": "integer", "minimum": 0 },
+        "deletions": { "type": "integer", "minimum": 0 },
+        "changedLines": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "score": {
+      "type": "object",
+      "required": ["value", "max", "verdict", "counts", "capped"],
+      "properties": {
+        "value": { "type": "integer", "minimum": 0, "maximum": 5 },
+        "max": { "const": 5 },
+        "verdict": { "type": "string" },
+        "counts": {
+          "type": "object",
+          "required": ["P0", "P1", "P2", "P3"],
+          "properties": {
+            "P0": { "type": "integer", "minimum": 0 },
+            "P1": { "type": "integer", "minimum": 0 },
+            "P2": { "type": "integer", "minimum": 0 },
+            "P3": { "type": "integer", "minimum": 0 }
+          },
+          "additionalProperties": false
+        },
+        "capped": { "type": "boolean" },
+        "capReason": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "findings": { "type": "array", "items": { "$ref": "#/definitions/finding" } },
+    "dropped": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["finding", "reason"],
+        "properties": { "finding": { "$ref": "#/definitions/finding" }, "reason": { "type": "string" } },
+        "additionalProperties": false
+      }
+    },
+    "graph": {
+      "type": ["object", "null"],
+      "required": ["added", "removed", "newCycles", "layerCrossings", "moduleEdgesAdded"],
+      "properties": {
+        "added": { "type": "array", "items": { "$ref": "#/definitions/edge" } },
+        "removed": { "type": "array", "items": { "$ref": "#/definitions/edge" } },
+        "newCycles": { "type": "array", "items": { "$ref": "#/definitions/cycle" } },
+        "layerCrossings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["from", "to", "fromModule", "toModule", "fromLayer", "toLayer", "violation"],
+            "properties": {
+              "from": { "type": "string" },
+              "to": { "type": "string" },
+              "fromModule": { "type": "string" },
+              "toModule": { "type": "string" },
+              "fromLayer": { "type": "integer" },
+              "toLayer": { "type": "integer" },
+              "violation": { "type": "boolean" }
+            },
+            "additionalProperties": false
+          }
+        },
+        "moduleEdgesAdded": { "type": "array", "items": { "$ref": "#/definitions/edge" } }
+      },
+      "additionalProperties": false
+    },
+    "lenses": {
+      "type": "object",
+      "required": ["ran", "skipped"],
+      "properties": {
+        "ran": { "type": "array", "items": { "type": "string" } },
+        "skipped": { "type": "array", "items": { "$ref": "#/definitions/skip" } }
+      },
+      "additionalProperties": false
+    },
+    "reviewers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "status"],
+        "properties": {
+          "id": { "type": "string" },
+          "status": { "enum": ["complete", "inconclusive"] },
+          "model": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "skippedRules": { "type": "array", "items": { "$ref": "#/definitions/skip" } },
+    "gate": {
+      "type": ["object", "null"],
+      "required": ["applies", "pass", "score", "branch", "reason"],
+      "properties": {
+        "applies": { "type": "boolean" },
+        "pass": { "type": "boolean" },
+        "score": { "type": "integer" },
+        "minScore": { "type": "integer" },
+        "branch": { "type": "string" },
+        "matched": { "type": "string" },
+        "reason": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "lane": {
+      "type": ["object", "null"],
+      "required": ["qualifies", "label", "reasons"],
+      "properties": {
+        "qualifies": { "type": "boolean" },
+        "label": { "type": "string" },
+        "reasons": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,0 +1,244 @@
+---
+import SectionHead from "./SectionHead.astro";
+import enterprise from "../data/enterprise.json";
+
+type Row = (typeof enterprise.rows)[number];
+
+/** The pill says exactly what enterprise.json says, so a status cannot drift from the data. */
+function pill(row: Row): { text: string; on: boolean } {
+  if (row.status === "available") return { text: "AVAILABLE", on: true };
+  if (row.status === "partial") return { text: "PARTIAL", on: false };
+  return { text: `ROADMAP · ${row.target.toUpperCase()}`, on: false };
+}
+---
+
+<section id="enterprise" class="section bg-surface" aria-labelledby="enterprise-title">
+  <div class="inner stack">
+    <SectionHead
+      id="enterprise-title"
+      num="07"
+      label="Enterprise"
+      lines={["Fits the controls", "you already have."]}
+      lead="Plumbline runs where your code already lives, under the policies you already enforce. Your security team reviews a dev dependency, not a new vendor."
+    />
+
+    <div class="body">
+      <table>
+        <caption class="sr-only">Enterprise capabilities and their status</caption>
+        <thead>
+          <tr><th scope="col">Capability</th><th scope="col">How it works</th><th scope="col">Status</th></tr>
+        </thead>
+        <tbody>
+          {enterprise.rows.map((row) => {
+            const p = pill(row);
+            return (
+              <tr>
+                <th scope="row">{row.capability}</th>
+                <td class="how">{row.how}</td>
+                <td><span class:list={["pill", { on: p.on }]}>{p.text}</span></td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+
+      <aside class="path" aria-labelledby="path-title">
+        <h3 id="path-title" class="micro">WHAT LEAVES YOUR NETWORK</h3>
+        <ol>
+          <li class="node"><i></i><div><strong>Your repo and CI</strong><span>inside your network</span></div></li>
+          <li class="link" aria-label="local"><i></i><span>local</span></li>
+          <li class="node"><i></i><div><strong>Your agent</strong><span>Claude Code, Codex, OpenCode</span></div></li>
+          <li class="link egress" aria-label="the only egress"><i></i><span>the only egress</span></li>
+          <li class="node end"><i></i><div><strong>Your model endpoint</strong><span>your account, your region</span></div></li>
+        </ol>
+        <p>Plumbline has no backend. There is nothing of ours to approve, host or breach.</p>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<style>
+  .stack {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+  .body {
+    display: flex;
+    align-items: flex-start;
+    gap: 56px;
+  }
+  table {
+    flex: 1 1 0;
+    min-width: 0;
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
+  thead th {
+    padding: 0 0 10px;
+    text-align: left;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 14px;
+    letter-spacing: 0.88px;
+    text-transform: uppercase;
+  }
+  thead th:nth-child(1) { width: 176px; }
+  thead th:nth-child(3) { width: 196px; }
+  tbody tr {
+    border-top: 1px solid var(--rule);
+  }
+  tbody tr:last-child {
+    border-bottom: 1px solid var(--rule);
+  }
+  tbody th,
+  tbody td {
+    padding: 13px 16px 13px 0;
+    text-align: left;
+    vertical-align: middle;
+  }
+  tbody th {
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 18px;
+    color: var(--text-primary);
+  }
+  tbody td.how {
+    padding-right: 24px;
+    font-size: 13px;
+    line-height: 20px;
+    color: var(--text-secondary);
+  }
+  tbody td:last-child {
+    padding-right: 0;
+    line-height: 16px;
+  }
+  .pill {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: var(--r-xs);
+    background: var(--bg-raised);
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    line-height: 13px;
+    letter-spacing: 0.6px;
+    white-space: nowrap;
+  }
+  .pill.on {
+    background: color-mix(in srgb, var(--accent-plumb) var(--tint-accent), transparent);
+    color: var(--accent-plumb);
+  }
+
+  .path {
+    flex: none;
+    width: 320px;
+  }
+  .path ol {
+    margin: 16px 0;
+  }
+  .node {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: var(--r-md);
+    background: var(--bg-raised);
+  }
+  .node > i {
+    flex: none;
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    background: var(--text-muted);
+  }
+  .node.end > i {
+    background: var(--accent-plumb);
+  }
+  .node div {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .node strong {
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 18px;
+    color: var(--text-primary);
+  }
+  .node span {
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 14px;
+  }
+  .link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-left: 17px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 14px;
+  }
+  .link i {
+    width: 1px;
+    height: 30px;
+    background: var(--line-edge);
+  }
+  .egress {
+    color: var(--accent-plumb);
+  }
+  .egress i {
+    background: var(--accent-plumb);
+  }
+  .path > p {
+    font-size: 13px;
+    line-height: 20px;
+    color: var(--text-secondary);
+  }
+
+  @media (max-width: 1279px) {
+    .body {
+      flex-direction: column;
+      gap: 40px;
+    }
+    table {
+      flex: none;
+      width: 100%;
+    }
+    .path {
+      width: 100%;
+      max-width: 420px;
+    }
+  }
+  @media (max-width: 767px) {
+    thead {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+    }
+    table,
+    tbody,
+    tr,
+    tbody th,
+    tbody td,
+    tbody td.how {
+      display: block;
+      width: 100%;
+      padding: 0;
+    }
+    tbody tr {
+      padding: 12px 0;
+    }
+    tbody td.how {
+      margin: 4px 0 8px;
+    }
+  }
+</style>

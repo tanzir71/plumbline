@@ -1,0 +1,206 @@
+---
+import Base from "./Base.astro";
+import { url } from "../lib/url";
+
+interface Props {
+  title: string;
+  description?: string;
+  canonicalPath: string;
+  heading: string;
+  nav?: { slug: string; title: string }[];
+  current?: string;
+}
+const { title, description, canonicalPath, heading, nav, current } = Astro.props;
+---
+
+<Base title={title} description={description} canonicalPath={canonicalPath}>
+  <div class="page">
+    <div class="wrap">
+      {nav && (
+        <nav class="side" aria-label="Documentation">
+          <p class="micro">DOCS</p>
+          <ul>
+            {nav.map((d) => {
+              const href = d.slug === "index" ? url("docs/") : url(`docs/${d.slug}/`);
+              return <li><a href={href} aria-current={d.slug === current ? "page" : undefined}>{d.title}</a></li>;
+            })}
+          </ul>
+        </nav>
+      )}
+      <article class="prose">
+        <h1>{heading}</h1>
+        <slot />
+      </article>
+    </div>
+  </div>
+</Base>
+
+<style>
+  .page {
+    padding: 48px var(--gutter) var(--section-y);
+  }
+  .wrap {
+    display: flex;
+    align-items: flex-start;
+    gap: 64px;
+    max-width: var(--content);
+    margin-inline: auto;
+  }
+  .side {
+    position: sticky;
+    top: 24px;
+    flex: none;
+    width: 220px;
+  }
+  .side ul {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-top: 12px;
+  }
+  .side a {
+    display: block;
+    padding: 5px 0;
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--text-secondary);
+  }
+  .side a:hover,
+  .side a[aria-current="page"] {
+    color: var(--text-primary);
+  }
+  .side a[aria-current="page"] {
+    font-weight: 500;
+    color: var(--accent-plumb);
+  }
+  .prose {
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: 760px;
+    font-size: 15px;
+    line-height: 25px;
+    color: var(--text-secondary);
+  }
+  h1 {
+    margin-bottom: 20px;
+    font-size: 32px;
+    font-weight: 600;
+    line-height: 38px;
+    letter-spacing: -0.64px;
+    color: var(--text-primary);
+  }
+  .prose :global(h2) {
+    margin: 36px 0 10px;
+    font-size: 22px;
+    font-weight: 600;
+    line-height: 28px;
+    letter-spacing: -0.3px;
+    color: var(--text-primary);
+  }
+  .prose :global(h3) {
+    margin: 26px 0 8px;
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 22px;
+    color: var(--text-primary);
+  }
+  .prose :global(p),
+  .prose :global(ul),
+  .prose :global(ol),
+  .prose :global(pre),
+  .prose :global(table) {
+    margin-bottom: 14px;
+  }
+  .prose :global(ul),
+  .prose :global(ol) {
+    padding-left: 20px;
+  }
+  .prose :global(ul) {
+    list-style: disc;
+  }
+  .prose :global(ol) {
+    list-style: decimal;
+  }
+  .prose :global(li) {
+    margin-bottom: 4px;
+  }
+  .prose :global(a) {
+    color: var(--accent-plumb);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .prose :global(strong) {
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+  .prose :global(code) {
+    padding: 1px 5px;
+    border-radius: var(--r-xs);
+    background: var(--bg-raised);
+    color: var(--text-primary);
+    font-size: 13px;
+  }
+  .prose :global(pre) {
+    padding: 16px;
+    border-radius: var(--r-md);
+    background: var(--bg-surface);
+    overflow-x: auto;
+    line-height: 21px;
+  }
+  .prose :global(pre code) {
+    padding: 0;
+    background: none;
+  }
+  .prose :global(table) {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    border-collapse: collapse;
+    font-size: 14px;
+    line-height: 21px;
+  }
+  .prose :global(th),
+  .prose :global(td) {
+    padding: 8px 16px 8px 0;
+    border-bottom: 1px solid var(--rule);
+    text-align: left;
+    vertical-align: top;
+  }
+  .prose :global(th) {
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.66px;
+    text-transform: uppercase;
+  }
+
+  @media (max-width: 1023px) {
+    .wrap {
+      flex-direction: column;
+      gap: 32px;
+    }
+    .side {
+      position: static;
+      width: 100%;
+    }
+    .side ul {
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 2px 18px;
+    }
+    .prose {
+      flex: none;
+      width: 100%;
+    }
+  }
+  @media (max-width: 767px) {
+    .page {
+      padding-top: 24px;
+    }
+    h1 {
+      font-size: 26px;
+      line-height: 32px;
+    }
+  }
+</style>

@@ -1,0 +1,11 @@
+Plumbline
+Copyright (c) 2026 Tanzir (tanziro.com)
+
+Based on greptile-style-review by Ashref-dev (MIT)
+https://github.com/Ashref-dev/greptile-style-review
+Copyright (c) 2026 Mohamed Ashref Ben Abdallah
+
+The review flow, reviewer brief, severity definitions and scoring rules in
+skills/plumbline/ are adapted from that project. Its MIT license is preserved
+in LICENSE. Plumbline is an independent project and is not affiliated with or
+endorsed by Greptile, Inc.

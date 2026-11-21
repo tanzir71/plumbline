@@ -1,0 +1,469 @@
+---
+import Button from "./Button.astro";
+import SectionHead from "./SectionHead.astro";
+import pricing from "../data/pricing.json";
+import { computeRows } from "../lib/pricing.js";
+
+const defaults = pricing.scenarioDefaults;
+const { rows, skipped } = computeRows(pricing.vendors, defaults);
+const checked = pricing.vendors.map((v) => v.checkedAt).sort()[0] as string;
+const checkedLabel = new Date(`${checked}T00:00:00Z`).toLocaleDateString("en-GB", {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+  timeZone: "UTC",
+});
+const sourceOf: Record<string, string> = Object.fromEntries(
+  pricing.vendors.filter((v) => v.model !== "free").map((v) => [v.id, v.sourceUrl]),
+);
+---
+
+<section id="cost" class="section bg-surface" aria-labelledby="cost-title">
+  <div class="inner stack">
+    <SectionHead
+      id="cost-title"
+      num="01"
+      label="Cost"
+      lines={["Stop paying a second bill", "for code review."]}
+      lead="Hosted reviewers charge per seat or per review, on top of the models they resell. Plumbline is free software that runs on the agent plan or API key you already pay for."
+    />
+
+    <div class="body">
+      <div class="table-col">
+        <div class="scenario">
+          <span class="micro">SCENARIO</span>
+          <span class="chip" data-chip="developers">{defaults.developers} developers</span>
+          <span class="chip" data-chip="prs">{defaults.prsPerMonth} PRs a month</span>
+          <span class="chip" data-chip="reviews">{defaults.reviewsPerPr} review per PR</span>
+          <span class="asof">list prices, {checkedLabel}</span>
+        </div>
+
+        <table>
+          <caption class="sr-only">Monthly and yearly vendor fees for the scenario above</caption>
+          <thead>
+            <tr>
+              <th scope="col">Product</th>
+              <th scope="col">Pricing</th>
+              <th scope="col">Per month</th>
+              <th scope="col">Per year</th>
+              <th scope="col" class="bar-col">Vendor bill, to scale</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr data-vendor={r.id} class:list={{ free: r.free }}>
+                <th scope="row">{sourceOf[r.id] ? <a href={sourceOf[r.id]} rel="noopener" title={`${r.name} pricing source`}>{r.name}</a> : r.name}</th>
+                <td class="pricing" data-field="pricing">{r.pricing}</td>
+                <td class="month" data-label="Per month" data-field="perMonth">{r.perMonth}</td>
+                <td class="year" data-label="Per year" data-field="perYear">{r.perYear}</td>
+                <td class="bar-col" aria-hidden="true">
+                  {r.free ? <span class="zero"></span> : (
+                    <span class="bars">
+                      <i class="low" style={`width:${r.lowPct}%`}></i>
+                      <i class="range" style={`width:${r.rangePct}%`}></i>
+                    </span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        <p class="note">
+          Vendor fees only. Hosted prices include each vendor's own model costs. With Plumbline, your model usage is billed by your provider: nothing extra on an agent plan you already pay for (within its limits), or token rates on an API key. Claude Code Review uses Anthropic's published $15–25 average; reviewing on every push costs more. Sources: each vendor's pricing page.
+        </p>
+      </div>
+
+      <div class="summary">
+        <div>
+          <p class="big">$0</p>
+          <p class="cap">Plumbline license, any team size</p>
+        </div>
+        <hr class="rule" />
+        <div>
+          <p class="mid" id="cost-skipped">{skipped}</p>
+          <p class="cap wrap">in vendor fees this team skips each year, depending on the tool it would have bought</p>
+        </div>
+        <Button id="calc-toggle" aria-expanded="false" aria-controls="calc">Run the numbers for your team</Button>
+      </div>
+    </div>
+
+    <form id="calc" class="calc" hidden aria-label="Cost calculator">
+      <label>Developers <input name="developers" type="number" inputmode="numeric" min="1" max="100000" value={defaults.developers} /></label>
+      <label>PRs per month <input name="prsPerMonth" type="number" inputmode="numeric" min="0" max="1000000" value={defaults.prsPerMonth} /></label>
+      <label>Reviews per PR <input name="reviewsPerPr" type="number" inputmode="numeric" min="1" max="100" value={defaults.reviewsPerPr} /></label>
+      <label>Billing
+        <select name="billing">
+          <option value="annual" selected={defaults.billing === "annual"}>Annual</option>
+          <option value="monthly" selected={defaults.billing === "monthly"}>Monthly</option>
+        </select>
+      </label>
+      <p id="calc-result" class="result" aria-live="polite"></p>
+    </form>
+  </div>
+  <script type="application/json" id="pricing-data" set:html={JSON.stringify(pricing.vendors)}></script>
+</section>
+
+<style>
+  .stack {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+  .body {
+    display: flex;
+    align-items: flex-start;
+    gap: 56px;
+  }
+  .table-col {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    flex: 1 1 0;
+    min-width: 0;
+  }
+  .scenario {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+  .chip {
+    padding: 3px 8px;
+    border-radius: var(--r-xs);
+    background: var(--bg-raised);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 16px;
+  }
+  .asof {
+    margin-left: 12px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 16px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
+  thead th {
+    padding: 0 0 10px;
+    border-bottom: 1px solid var(--rule);
+    text-align: left;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 14px;
+    letter-spacing: 0.88px;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  thead th:nth-child(1) { width: 176px; }
+  thead th:nth-child(2) { width: 256px; }
+  thead th:nth-child(3) { width: 132px; }
+  thead th:nth-child(4) { width: 112px; }
+  tbody tr {
+    border-bottom: 1px solid var(--rule);
+  }
+  tbody th,
+  tbody td {
+    padding: 14px 16px 14px 0;
+    text-align: left;
+    vertical-align: middle;
+    line-height: 18px;
+  }
+  tbody th {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+  .pricing {
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+  .month {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+  .year {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+  .free th,
+  .free .month,
+  .free .year {
+    color: var(--accent-plumb);
+  }
+  td.bar-col {
+    padding-right: 0;
+  }
+  .bars {
+    display: flex;
+    align-items: center;
+  }
+  .bars i {
+    display: block;
+    height: 8px;
+    border-radius: 1px;
+    transition: width 160ms ease;
+  }
+  .low {
+    background: color-mix(in srgb, var(--text-muted) 55%, transparent);
+  }
+  .range {
+    background: color-mix(in srgb, var(--text-muted) 22%, transparent);
+  }
+  .zero {
+    display: block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent-plumb);
+  }
+  .note {
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 18px;
+  }
+  tbody th a:hover {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .summary {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 22px;
+    flex: none;
+    width: 300px;
+  }
+  .summary > div {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .summary .rule {
+    width: 100%;
+  }
+  .big {
+    font-size: 64px;
+    font-weight: 600;
+    line-height: 68px;
+    letter-spacing: -1.92px;
+    color: var(--accent-plumb);
+  }
+  .mid {
+    font-size: 36px;
+    font-weight: 600;
+    line-height: 42px;
+    letter-spacing: -0.72px;
+    color: var(--text-primary);
+    white-space: nowrap;
+  }
+  .cap {
+    font-size: 14px;
+    line-height: 21px;
+    color: var(--text-secondary);
+  }
+  .calc {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+    padding: 20px;
+    border-radius: var(--r-lg);
+    background: var(--bg-raised);
+  }
+  .calc[hidden] {
+    display: none;
+  }
+  .calc label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.66px;
+    text-transform: uppercase;
+  }
+  .calc input,
+  .calc select {
+    width: 100%;
+    height: 40px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: var(--r-sm);
+    background: var(--bg-inset);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 400;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+  .result {
+    grid-column: 1 / -1;
+    color: var(--text-secondary);
+    font-size: 13px;
+    line-height: 20px;
+  }
+  .result:empty {
+    display: none;
+  }
+
+  @media (max-width: 1279px) {
+    .bar-col {
+      display: none;
+    }
+    thead th:nth-child(1) { width: 26%; }
+    thead th:nth-child(2) { width: 36%; }
+    thead th:nth-child(3) { width: 21%; }
+    thead th:nth-child(4) { width: 17%; }
+    .body {
+      gap: 40px;
+    }
+    .summary {
+      width: 260px;
+    }
+  }
+  @media (max-width: 1023px) {
+    .body {
+      flex-direction: column;
+    }
+    .table-col {
+      flex: none;
+      width: 100%;
+    }
+    .summary {
+      width: 100%;
+    }
+    .calc {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 767px) {
+    .asof {
+      margin-left: 0;
+      width: 100%;
+    }
+    thead {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+    }
+    table,
+    tbody,
+    tr,
+    tbody th,
+    tbody td {
+      display: block;
+      width: 100%;
+    }
+    tbody tr {
+      padding: 12px 0;
+    }
+    tbody tr:first-child {
+      border-top: 1px solid var(--rule);
+    }
+    tbody th,
+    tbody td {
+      padding: 0;
+    }
+    .pricing {
+      margin: 2px 0 8px;
+    }
+    tbody td.month,
+    tbody td.year {
+      display: flex;
+      justify-content: space-between;
+      padding: 2px 0;
+    }
+    tbody td.month::before,
+    tbody td.year::before {
+      content: attr(data-label);
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 400;
+    }
+    tbody td.bar-col {
+      display: none;
+    }
+  }
+</style>
+
+<script>
+  import { computeRows } from "../lib/pricing.js";
+
+  const form = document.getElementById("calc") as HTMLFormElement | null;
+  const toggle = document.getElementById("calc-toggle");
+  const dataEl = document.getElementById("pricing-data");
+
+  if (form && toggle && dataEl) {
+    const vendors = JSON.parse(dataEl.textContent ?? "[]");
+    const result = document.getElementById("calc-result") as HTMLElement;
+    const skipped = document.getElementById("cost-skipped") as HTMLElement;
+    const chip = (name: string) => document.querySelector<HTMLElement>(`[data-chip="${name}"]`);
+    const plural = (n: number, one: string, many: string) => `${n.toLocaleString("en-US")} ${n === 1 ? one : many}`;
+
+    const number = (name: string, min: number) => {
+      const input = form.elements.namedItem(name) as HTMLInputElement;
+      const value = Math.floor(Number(input.value));
+      return Number.isFinite(value) ? Math.min(Math.max(value, min), Number(input.max)) : min;
+    };
+
+    const update = () => {
+      const scenario = {
+        developers: number("developers", 1),
+        prsPerMonth: number("prsPerMonth", 0),
+        reviewsPerPr: number("reviewsPerPr", 1),
+        billing: (form.elements.namedItem("billing") as HTMLSelectElement).value,
+      };
+      const out = computeRows(vendors, scenario);
+
+      for (const row of out.rows) {
+        const tr = document.querySelector<HTMLElement>(`tr[data-vendor="${row.id}"]`);
+        if (!tr) continue;
+        for (const field of ["pricing", "perMonth", "perYear"] as const) {
+          const cell = tr.querySelector<HTMLElement>(`[data-field="${field}"]`);
+          if (cell) cell.textContent = row[field];
+        }
+        const low = tr.querySelector<HTMLElement>(".low");
+        const range = tr.querySelector<HTMLElement>(".range");
+        if (low) low.style.width = `${row.lowPct}%`;
+        if (range) range.style.width = `${row.rangePct}%`;
+      }
+
+      skipped.textContent = out.skipped;
+      chip("developers")!.textContent = plural(scenario.developers, "developer", "developers");
+      chip("prs")!.textContent = `${scenario.prsPerMonth.toLocaleString("en-US")} PRs a month`;
+      chip("reviews")!.textContent = `${plural(scenario.reviewsPerPr, "review", "reviews")} per PR`;
+      result.textContent = out.rows
+        .filter((r) => !r.free)
+        .map((r) => `${r.name}: ${r.perMonth} a month, ${r.perYear} a year`)
+        .join(". ") + ". Plumbline: $0.";
+    };
+
+    toggle.addEventListener("click", () => {
+      const open = form.hidden;
+      form.hidden = !open;
+      toggle.setAttribute("aria-expanded", String(open));
+      if (open) {
+        update();
+        (form.elements.namedItem("developers") as HTMLInputElement).focus();
+      }
+    });
+    form.addEventListener("input", update);
+    form.addEventListener("submit", (e) => e.preventDefault());
+  }
+</script>

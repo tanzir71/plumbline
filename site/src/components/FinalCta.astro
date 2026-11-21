@@ -1,0 +1,170 @@
+---
+import check from "../assets/figma/check-accent-14.svg?url";
+import arrow from "../assets/figma/arrow-14.svg?url";
+import Button from "./Button.astro";
+import { url } from "../lib/url";
+
+const items = [
+  "Contract drafted from your ADRs and agent rules",
+  "Lenses tuned on your last 100 merged PRs",
+  "CI gating set up branch by branch",
+];
+---
+
+<section id="audit" class="cta" aria-labelledby="cta-title">
+  <div class="inner cols">
+    <div class="left">
+      <h2 id="cta-title">Keep your architecture true.</h2>
+      <p class="lead">Open source, MIT licensed, and free to run with the model keys you already have.</p>
+      <div class="buttons">
+        <Button variant="primary" href={url("#install")}>Install Plumbline</Button>
+        <Button href={url("docs/")}>Read the docs</Button>
+      </div>
+    </div>
+
+    <div class="box-wrap">
+      <div class="box">
+        <p class="micro">FOR TEAMS ROLLING OUT</p>
+        <h3>Architecture audit</h3>
+        <ul>
+          {items.map((t) => <li><img src={check} alt="" width="14" height="14" />{t}</li>)}
+        </ul>
+        <a class="book" href="#audit">Book an architecture audit <img src={arrow} alt="" width="14" height="14" /></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .cta {
+    padding: 96px var(--gutter);
+    background: var(--bg-canvas);
+    overflow: clip;
+  }
+  .cols {
+    display: flex;
+    align-items: center;
+    gap: 56px;
+  }
+  .left {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    flex: 1 1 0;
+    min-width: 0;
+  }
+  h2 {
+    max-width: 620px;
+    font-size: 40px;
+    font-weight: 600;
+    line-height: 46px;
+    letter-spacing: -1px;
+  }
+  .lead {
+    max-width: 520px;
+    font-size: 16px;
+    line-height: 25px;
+    color: var(--text-secondary);
+  }
+  .buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding-top: 6px;
+  }
+  .box-wrap {
+    position: relative;
+    isolation: isolate;
+    flex: none;
+    width: 460px;
+  }
+  /* Halo only: the opaque box covers the middle of each glow. */
+  .box-wrap::before {
+    content: "";
+    position: absolute;
+    inset: -240px;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(115.2px 223px at 272.8px 50%, rgb(110 231 200 / 0.06), rgb(110 231 200 / 0)),
+      radial-gradient(403.2px 200.7px at calc(240px + (100% - 480px) * 0.572) calc(100% - 144px), rgb(143 162 255 / 0.1), rgb(143 162 255 / 0));
+  }
+  .box {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 28px;
+    border-radius: var(--r-xl);
+    background: var(--bg-surface);
+  }
+  h3 {
+    font-size: 20px;
+    font-weight: 500;
+    line-height: 26px;
+    letter-spacing: -0.2px;
+    color: var(--text-primary);
+  }
+  ul {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    line-height: 18px;
+    color: var(--text-secondary);
+  }
+  li img {
+    flex: none;
+  }
+  .book {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding-top: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 18px;
+    color: var(--text-primary);
+  }
+
+  @media (max-width: 1279px) {
+    .box-wrap {
+      width: 400px;
+    }
+  }
+  @media (max-width: 1023px) {
+    .cols {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 40px;
+    }
+    .left {
+      flex: none;
+    }
+    .box-wrap {
+      width: 100%;
+      max-width: 460px;
+    }
+    h2 {
+      font-size: 32px;
+      line-height: 38px;
+      letter-spacing: -0.8px;
+    }
+  }
+  @media (max-width: 767px) {
+    .cta {
+      padding: var(--section-y) var(--gutter);
+    }
+    h2 {
+      font-size: 28px;
+      line-height: 34px;
+    }
+    .box {
+      padding: 20px;
+    }
+  }
+</style>

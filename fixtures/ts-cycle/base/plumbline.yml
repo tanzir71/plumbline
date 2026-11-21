@@ -1,0 +1,4 @@
+version: 1
+modules:
+  billing: ["src/billing/**"]
+  users/session: ["src/users/session/**"]

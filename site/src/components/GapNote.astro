@@ -1,0 +1,55 @@
+---
+interface Props {
+  num: string;
+  title: string;
+  body: string;
+  caught: string;
+}
+const { num, title, body, caught } = Astro.props;
+---
+
+<li class="note">
+  <div class="head"><span class="num">{num}</span><h3>{title}</h3></div>
+  <p class="body">{body}</p>
+  <p class="caught">{caught}</p>
+</li>
+
+<style>
+  .note {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border-top: 1px solid var(--line-edge);
+  }
+  .head {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    padding-top: 20px;
+  }
+  .num {
+    color: var(--accent-plumb);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 16px;
+  }
+  h3 {
+    font-size: 17px;
+    font-weight: 500;
+    line-height: 22px;
+    letter-spacing: -0.17px;
+    color: var(--text-primary);
+  }
+  .body {
+    font-size: 14px;
+    line-height: 21px;
+    color: var(--text-secondary);
+  }
+  .caught {
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 16px;
+  }
+</style>

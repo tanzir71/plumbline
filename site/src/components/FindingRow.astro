@@ -1,0 +1,53 @@
+---
+import Badge from "./Badge.astro";
+import Tag from "./Tag.astro";
+
+interface Props {
+  severity: "P0" | "P1" | "P2" | "P3";
+  lens: string;
+  title: string;
+  body: string;
+  proof: string;
+}
+const { severity, lens, title, body, proof } = Astro.props;
+---
+
+<article class="finding">
+  <div class="head"><Badge severity={severity} /><Tag>{lens}</Tag></div>
+  <h3>{title}</h3>
+  <p class="body">{body}</p>
+  <p class="proof">{proof}</p>
+</article>
+
+<style>
+  .finding {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 18px 20px;
+    border-radius: var(--r-lg);
+    background: var(--bg-raised);
+  }
+  .head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  h3 {
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 22px;
+    color: var(--text-primary);
+  }
+  .body {
+    font-size: 14px;
+    line-height: 21px;
+    color: var(--text-secondary);
+  }
+  .proof {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--accent-plumb);
+  }
+</style>

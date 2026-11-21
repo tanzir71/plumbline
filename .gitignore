@@ -1,0 +1,29 @@
+node_modules/
+dist/
+.astro/
+coverage/
+*.log
+*.tsbuildinfo
+.DS_Store
+Thumbs.db
+
+# Local secrets never belong in this public repo
+.env
+.env.*
+!.env.example
+
+# Plumbline run output and proof tests
+.plumbline/run/
+.plumbline/proofs/
+
+# Copied from skills/plumbline at build time
+packages/cli/lenses/
+packages/action/skill/
+
+# Local agent settings
+.claude/
+
+# Playwright and Lighthouse output
+site/test-results/
+site/playwright-report/
+.lighthouseci/

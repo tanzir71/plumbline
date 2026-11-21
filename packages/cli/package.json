@@ -1,0 +1,46 @@
+{
+  "name": "@plumbline/cli",
+  "version": "1.0.0",
+  "description": "Plumbline CLI and MCP server: scope, import graph diff, contract checks and reports.",
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tanzir71/plumbline.git",
+    "directory": "packages/cli"
+  },
+  "homepage": "https://tanzir71.github.io/plumbline/",
+  "engines": {
+    "node": ">=20.12.0"
+  },
+  "bin": {
+    "plumbline": "./bin/plumbline.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/lib.d.ts",
+      "import": "./dist/lib.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "bin",
+    "dist",
+    "lenses"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "tsup && node ../../scripts/copy-lenses.mjs",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "@plumbline/core": "workspace:^",
+    "yaml": "^2.9.1",
+    "zod": "^4.6.7"
+  }
+}

@@ -1,0 +1,76 @@
+---
+import copyDark from "../assets/figma/copy.svg?url";
+import copyMuted from "../assets/figma/copy-muted.svg?url";
+
+interface Props {
+  text: string;
+  label: string;
+  tone?: "accent" | "plain";
+}
+const { text, label, tone = "accent" } = Astro.props;
+---
+
+<button class:list={["copy", tone]} type="button" data-copy={text} aria-label={label}>
+  <img class="icon-copy" src={tone === "accent" ? copyDark : copyMuted} alt="" width="16" height="16" />
+  <svg class="icon-done" width="16" height="16" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+    <path d="M2.625 7.4375L5.6875 10.5L11.375 3.9375" stroke="currentColor" stroke-width="1.53" stroke-linecap="round" stroke-linejoin="round"></path>
+  </svg>
+</button>
+
+<style>
+  .copy {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    flex: none;
+    border-radius: var(--r-sm);
+  }
+  .accent {
+    background: var(--accent-plumb);
+    color: var(--accent-on-plumb);
+  }
+  .plain {
+    position: relative;
+    width: 16px;
+    height: 16px;
+    color: var(--accent-plumb);
+  }
+  /* The icon is 16px in the design. This keeps the click target at 32px. */
+  .plain::after {
+    content: "";
+    position: absolute;
+    inset: -8px;
+  }
+  .icon-done {
+    display: none;
+  }
+  .copy[data-done] .icon-copy {
+    display: none;
+  }
+  .copy[data-done] .icon-done {
+    display: block;
+  }
+</style>
+
+<script>
+  const live = document.getElementById("copy-status");
+
+  document.addEventListener("click", async (event) => {
+    const button = (event.target as Element).closest<HTMLButtonElement>("button[data-copy]");
+    if (!button) return;
+    try {
+      await navigator.clipboard.writeText(button.dataset.copy ?? "");
+    } catch {
+      if (live) live.textContent = "Copy failed";
+      return;
+    }
+    button.dataset.done = "";
+    if (live) {
+      live.textContent = "";
+      live.textContent = "Copied";
+    }
+    setTimeout(() => delete button.dataset.done, 1500);
+  });
+</script>

@@ -1,0 +1,11 @@
+---
+import Prose from "../../layouts/Prose.astro";
+import { docs } from "../../lib/content";
+
+const all = docs();
+const page = all.find((d) => d.slug === "index") as (typeof all)[number];
+---
+
+<Prose title="Docs — Plumbline" description={page.description} canonicalPath="docs/" heading={page.title} nav={all} current="index">
+  <Fragment set:html={page.html} />
+</Prose>

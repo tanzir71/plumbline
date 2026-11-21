@@ -1,0 +1,127 @@
+name: Plumbline
+description: Open-source code review with your own model key. Checks the structure, not just the diff.
+author: tanziro.com
+branding:
+  icon: check-square
+  color: green
+
+inputs:
+  model:
+    description: Model id for the review agent. Empty uses the agent's default.
+    required: false
+    default: ""
+  key:
+    description: Your model provider key. Store it as a repository secret. Without a key, only the graph and rule checks run.
+    required: false
+    default: ""
+  provider:
+    description: "anthropic, bedrock, vertex or openai-compatible"
+    required: false
+    default: anthropic
+  base-url:
+    description: Endpoint for provider openai-compatible, or a custom Anthropic-compatible gateway.
+    required: false
+    default: ""
+  comment:
+    description: Post or update one PR comment.
+    required: false
+    default: "true"
+  upload-sarif:
+    description: "auto (public repos only), true or false. Code scanning on private repos needs GitHub Code Security."
+    required: false
+    default: auto
+  gate:
+    description: Fail the job when the merge score is below the contract's minimum for the base branch.
+    required: false
+    default: "true"
+  lanes:
+    description: Add or remove the light-review label. A label only. Plumbline never approves or merges.
+    required: false
+    default: "true"
+  fail-on-error:
+    description: Fail the job if the review itself errors. When false, it reports the deterministic result and caps the score at 4.
+    required: false
+    default: "false"
+  proof-tests:
+    description: Let the agent run tests as proof. This runs the PR's code in a job that holds your model key, so enable it only for trusted contributors.
+    required: false
+    default: "false"
+  token:
+    description: Token for comments and labels.
+    required: false
+    default: ${{ github.token }}
+
+outputs:
+  merge-score:
+    description: Merge score, 0 to 5.
+    value: ${{ steps.review.outputs.merge-score }}
+  gate:
+    description: pass, fail or none.
+    value: ${{ steps.review.outputs.gate }}
+  lane:
+    description: The lane label when the PR qualifies, otherwise empty.
+    value: ${{ steps.review.outputs.lane }}
+  report-dir:
+    description: Directory holding report.md, report.json and report.sarif.
+    value: ${{ steps.review.outputs.report-dir }}
+
+runs:
+  using: composite
+  steps:
+    - id: node
+      shell: bash
+      run: |
+        major="$(node -p 'process.versions.node.split(".")[0]' 2>/dev/null || echo 0)"
+        if [ "$major" -ge 20 ]; then echo "ok=true" >> "$GITHUB_OUTPUT"; else echo "ok=false" >> "$GITHUB_OUTPUT"; fi
+
+    - if: steps.node.outputs.ok != 'true'
+      uses: actions/setup-node@v7
+      with:
+        node-version: 22
+
+    - id: review
+      shell: bash
+      env:
+        PLUMBLINE_MODEL: ${{ inputs.model }}
+        PLUMBLINE_MODEL_KEY: ${{ inputs.key }}
+        PLUMBLINE_PROVIDER: ${{ inputs.provider }}
+        PLUMBLINE_BASE_URL: ${{ inputs.base-url }}
+        PLUMBLINE_COMMENT: ${{ inputs.comment }}
+        PLUMBLINE_GATE: ${{ inputs.gate }}
+        PLUMBLINE_LANES: ${{ inputs.lanes }}
+        PLUMBLINE_FAIL_ON_ERROR: ${{ inputs.fail-on-error }}
+        PLUMBLINE_PROOF_TESTS: ${{ inputs.proof-tests }}
+        PLUMBLINE_GITHUB_TOKEN: ${{ inputs.token }}
+        PLUMBLINE_DEFER_GATE: "true"
+        PLUMBLINE_WORKSPACE: ${{ github.workspace }}
+        ACTION_PATH: ${{ github.action_path }}
+      # Run npx from outside the checkout, so a PR's node_modules or .npmrc cannot replace the runtime.
+      run: |
+        version="$(node -p "require(process.env.ACTION_PATH + '/packages/action/package.json').version")"
+        cd "$RUNNER_TEMP"
+        npx --yes "@plumbline/action@${version}"
+
+    - if: always() && steps.review.outputs.report-dir != ''
+      uses: actions/upload-artifact@v7
+      with:
+        name: plumbline-report-${{ github.run_id }}-${{ github.run_attempt }}
+        path: ${{ steps.review.outputs.report-dir }}
+        if-no-files-found: ignore
+
+    - if: >-
+        always() && steps.review.outputs.report-dir != '' &&
+        (inputs.upload-sarif == 'true' || (inputs.upload-sarif == 'auto' && github.event.repository.private == false))
+      uses: github/codeql-action/upload-sarif@v4
+      continue-on-error: true
+      with:
+        sarif_file: ${{ steps.review.outputs.report-dir }}/report.sarif
+        category: plumbline
+
+    # The gate fails last, so the comment, artifacts and SARIF are always published first.
+    - if: steps.review.outputs.gate == 'fail'
+      shell: bash
+      env:
+        REASON: ${{ steps.review.outputs.gate-reason }}
+      run: |
+        echo "::error title=Plumbline merge gate::${REASON}"
+        exit 1

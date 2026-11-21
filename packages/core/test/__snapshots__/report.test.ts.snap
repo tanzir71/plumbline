@@ -1,0 +1,36 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`report > renders stable markdown 1`] = `
+"<!-- plumbline:review -->
+## Merge score: 4/5 — 1 P1 · 0 P2
+
+Fix the P1 before merging.
+
+### Findings
+
+#### 1. 🟠 P1 · L02 · New import creates a cycle: billing -> users/session -> billing — \`src/billing/plans.ts\`
+
+New import: src/billing/plans.ts -> src/users/session/index.ts. Closes a file-level loop: src/billing/plans.ts -> src/users/session/index.ts -> src/billing/plans.ts. Closes a module-level loop: billing -> users/session -> billing.
+
+**Proof:** graph_diff \`src/billing/plans.ts -> src/users/session/index.ts -> src/billing/plans.ts\` (cycle not present at base) · graph_diff \`billing -> users/session -> billing\` (cycle not present at base) · graph_diff \`src/billing/plans.ts -> src/users/session/index.ts\` (edge added in this change)
+
+### Dependency diff
+
+\`\`\`mermaid
+flowchart LR
+  n0["users/session"]
+  n1["billing"]
+  n0 --> n1
+  n1 ==>|new| n0
+  linkStyle 1 stroke:#FF6B81,stroke-width:2px
+\`\`\`
+
+---
+
+<sub>Ran: graph and rule checks only (no model)</sub><br>
+<sub>Scope: feat/change vs main · HEADSHA · 1 files +6/-0</sub><br>
+<sub>Model: none · Duration: 4s</sub><br>
+<sub>Skipped lenses: L01 (model reviewers did not run)</sub><br>
+<sub>Lane: standard review. merge score 4/5 is below 5/5; has a P1 finding (allowed up to P3); the model reviewers did not run.</sub><br>
+"
+`;

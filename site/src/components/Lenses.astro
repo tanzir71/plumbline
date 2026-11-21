@@ -1,0 +1,201 @@
+---
+import SectionHead from "./SectionHead.astro";
+import { lenses } from "../lib/content";
+
+const rows = lenses();
+---
+
+<section id="lenses" class="section bg-canvas" aria-labelledby="lenses-title">
+  <div class="inner stack">
+    <SectionHead
+      id="lenses-title"
+      num="04"
+      label="Lenses"
+      lines={["Eight lenses.", "Regressions are just the first."]}
+      lead="Each lens is a reviewer brief you can read, edit or turn off. Bring your own by dropping a markdown file in .plumbline/lenses."
+    />
+
+    <div>
+      <table>
+        <caption class="sr-only">The review lenses, what each catches and the proof it uses</caption>
+        <thead>
+          <tr>
+            <th scope="col">ID</th>
+            <th scope="col">Lens</th>
+            <th scope="col">Catches</th>
+            <th scope="col" class="example-col">Example</th>
+            <th scope="col">Proof</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((l) => (
+            <tr>
+              <td class="id">{l.id}</td>
+              <th scope="row" class="name">{l.name}</th>
+              <td class="catches">{l.catches}</td>
+              <td class="example-col"><code class="chip">{l.example}</code></td>
+              <td class="proof">{l.proof.join(" · ")}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p class="add"><span class="plus" aria-hidden="true">+</span><span class="add-title">Add your own lens</span><code>.plumbline/lenses/*.md</code></p>
+    </div>
+  </div>
+</section>
+
+<style>
+  .stack {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
+  thead th {
+    padding: 0 0 14px;
+    text-align: left;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 14px;
+    letter-spacing: 0.88px;
+    text-transform: uppercase;
+  }
+  /* 72 / 220 / 380 / 300 / 228 at the designed 1200px width. */
+  thead th:nth-child(1) { width: 6%; }
+  thead th:nth-child(2) { width: 18.3333%; }
+  thead th:nth-child(3) { width: 31.6667%; }
+  thead th:nth-child(4) { width: 25%; }
+  thead th:nth-child(5) { width: 19%; }
+  tbody tr {
+    border-top: 1px solid var(--rule);
+  }
+  tbody tr:last-child {
+    border-bottom: 1px solid var(--rule);
+  }
+  tbody td,
+  tbody th {
+    padding: 13px 24px 13px 0;
+    text-align: left;
+    vertical-align: middle;
+  }
+  .id {
+    color: var(--accent-plumb);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 17px;
+  }
+  .name {
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 20px;
+    letter-spacing: -0.15px;
+    color: var(--text-primary);
+  }
+  tbody td.catches {
+    padding-right: 40px;
+    font-size: 13px;
+    line-height: 20px;
+    color: var(--text-secondary);
+  }
+  .chip {
+    display: block;
+    padding: 4px 8px;
+    border-radius: var(--r-sm);
+    background: var(--bg-surface);
+    color: var(--text-muted);
+    font-size: 12px;
+    line-height: 18px;
+    overflow-wrap: anywhere;
+  }
+  tbody td.proof {
+    padding-right: 0;
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 16px;
+    white-space: nowrap;
+  }
+  .add {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding-top: 20px;
+    line-height: 20px;
+  }
+  .plus {
+    width: 56px;
+    color: var(--accent-plumb);
+    font-family: var(--font-mono);
+    font-size: 15px;
+    font-weight: 500;
+  }
+  .add-title {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+  .add code {
+    color: var(--text-muted);
+    font-size: 12px;
+  }
+
+  @media (max-width: 1279px) {
+    .example-col {
+      display: none;
+    }
+    thead th:nth-child(1) { width: 8%; }
+    thead th:nth-child(2) { width: 24%; }
+    thead th:nth-child(3) { width: 44%; }
+    thead th:nth-child(5) { width: 24%; }
+    tbody td.proof {
+      white-space: normal;
+    }
+  }
+  @media (max-width: 767px) {
+    thead {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+    }
+    table,
+    tbody {
+      display: block;
+    }
+    tbody tr {
+      display: grid;
+      grid-template-columns: 44px minmax(0, 1fr);
+      gap: 4px 0;
+      padding: 12px 0;
+    }
+    tbody td,
+    tbody th,
+    tbody td.catches,
+    tbody td.proof {
+      padding: 0;
+    }
+    .catches,
+    .proof {
+      grid-column: 2;
+    }
+    .add {
+      flex-wrap: wrap;
+      gap: 4px 0;
+    }
+    .plus {
+      width: 44px;
+    }
+    .add code {
+      width: 100%;
+      padding-left: 44px;
+    }
+  }
+</style>

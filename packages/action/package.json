@@ -1,0 +1,36 @@
+{
+  "name": "@plumbline/action",
+  "version": "1.0.0",
+  "description": "CI runtime for the Plumbline GitHub Action and GitLab CI template.",
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tanzir71/plumbline.git",
+    "directory": "packages/action"
+  },
+  "homepage": "https://tanzir71.github.io/plumbline/",
+  "engines": {
+    "node": ">=20.12.0"
+  },
+  "bin": {
+    "plumbline-ci": "./dist/index.js"
+  },
+  "files": [
+    "dist",
+    "skill"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "tsup && node ../../scripts/copy-skill.mjs",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@plumbline/cli": "workspace:^",
+    "@plumbline/core": "workspace:^"
+  }
+}

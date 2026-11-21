@@ -1,0 +1,31 @@
+---
+import { url } from "../lib/url";
+---
+
+<a class="logo" href={url()} aria-label="Plumbline home">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <rect x="1.5" y="3" width="12" height="4.5" rx="1" fill="var(--text-secondary)"></rect>
+    <rect x="4.5" y="9.75" width="12" height="4.5" rx="1" fill="var(--text-secondary)"></rect>
+    <rect x="1.5" y="16.5" width="12" height="4.5" rx="1" fill="var(--text-secondary)"></rect>
+    <path d="M20.5 3V16.75" stroke="var(--accent-plumb)" stroke-width="1.5"></path>
+    <circle cx="20.5" cy="18.75" r="2.25" fill="var(--accent-plumb)"></circle>
+  </svg>
+  <span>plumbline</span>
+</a>
+
+<style>
+  .logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 19px;
+    font-weight: 600;
+    letter-spacing: -0.38px;
+    line-height: 25px;
+    color: var(--text-primary);
+  }
+  svg {
+    overflow: visible;
+    flex: none;
+  }
+</style>

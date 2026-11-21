@@ -1,0 +1,81 @@
+---
+import "../styles/tokens.css";
+import "../styles/base.css";
+import sans400 from "@fontsource/geist-sans/files/geist-sans-latin-400-normal.woff2?url";
+import sans500 from "@fontsource/geist-sans/files/geist-sans-latin-500-normal.woff2?url";
+import sans600 from "@fontsource/geist-sans/files/geist-sans-latin-600-normal.woff2?url";
+// The full Geist Mono build, because the Fontsource subset drops the `->` arrow ligature.
+import mono400 from "../assets/fonts/GeistMono-Regular.woff2?url";
+import mono500 from "../assets/fonts/GeistMono-Medium.woff2?url";
+import Announcement from "../components/Announcement.astro";
+import Footer from "../components/Footer.astro";
+import Nav from "../components/Nav.astro";
+import { url } from "../lib/url";
+
+interface Props {
+  title?: string;
+  description?: string;
+  canonicalPath?: string;
+  noindex?: boolean;
+}
+
+const LEAD =
+  "Plumbline is an open-source code reviewer that runs inside Claude Code, Codex and OpenCode. It hunts regressions like the hosted bots, then checks every PR against the architecture your team agreed on, and proves every serious finding.";
+const {
+  title = "Plumbline — review the structure, not just the diff",
+  description = LEAD,
+  canonicalPath = "",
+  noindex = false,
+} = Astro.props;
+
+const canonical = new URL(url(canonicalPath), Astro.site).href;
+const ogImage = new URL(url("og.png"), Astro.site).href;
+
+const face = (family: string, weight: number, src: string) =>
+  `@font-face{font-family:"${family}";font-style:normal;font-weight:${weight};font-display:swap;src:url("${src}") format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+2074,U+20AC,U+2122,U+2190-2193,U+2212,U+2215,U+FEFF,U+FFFD}`;
+
+// Fallbacks are tuned to Geist's metrics, so the swap to the web font does not shift the layout.
+const fonts = [
+  face("Geist", 400, sans400),
+  face("Geist", 500, sans500),
+  face("Geist", 600, sans600),
+  face("Geist Mono", 400, mono400),
+  face("Geist Mono", 500, mono500),
+  `@font-face{font-family:"Geist Fallback";src:local("Arial");size-adjust:104.5%;ascent-override:96%;descent-override:28%;line-gap-override:0%}`,
+  `@font-face{font-family:"Geist Mono Fallback";src:local("Consolas"),local("Menlo"),local("Courier New");size-adjust:109%;ascent-override:92%;descent-override:27%;line-gap-override:0%}`,
+].join("");
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {noindex && <meta name="robots" content="noindex" />}
+    <meta name="theme-color" content="#0A0C0F" />
+    <link rel="icon" type="image/svg+xml" href={url("favicon.svg")} />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="preload" href={sans400} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={sans600} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={mono400} as="font" type="font/woff2" crossorigin />
+    <style is:inline set:html={fonts}></style>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <Announcement />
+    <Nav />
+    <main id="main"><slot /></main>
+    <Footer />
+    <div id="copy-status" class="sr-only" aria-live="polite"></div>
+  </body>
+</html>

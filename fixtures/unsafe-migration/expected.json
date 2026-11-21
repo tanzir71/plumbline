@@ -1,0 +1,9 @@
+{
+  "findings": [
+    {
+      "lens": "L05",
+      "minSeverity": "P2",
+      "file": "migrations/002_drop_legacy_total.sql"
+    }
+  ]
+}

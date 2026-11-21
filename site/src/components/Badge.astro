@@ -1,0 +1,22 @@
+---
+interface Props {
+  severity: "P0" | "P1" | "P2" | "P3";
+}
+const { severity } = Astro.props;
+---
+
+<span class="badge" style={`--c: var(--sev-${severity.toLowerCase()})`}>{severity}</span>
+
+<style>
+  .badge {
+    display: inline-flex;
+    padding: 3px 8px;
+    border-radius: var(--r-xs);
+    background: color-mix(in srgb, var(--c) var(--tint-sev), transparent);
+    color: var(--c);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 16px;
+  }
+</style>

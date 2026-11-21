@@ -1,0 +1,51 @@
+{
+  "name": "@plumbline/core",
+  "version": "1.0.0",
+  "description": "Contract parser, import graph diff, rule checks, merge score and reports for Plumbline.",
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tanzir71/plumbline.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://tanzir71.github.io/plumbline/",
+  "engines": {
+    "node": ">=20.12.0"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./schema/report.v1.json": "./schema/report.v1.json",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "schema"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "dependency-cruiser": "^17.4.3",
+    "picomatch": "^4.0.3",
+    "typescript": "~5.9.3",
+    "yaml": "^2.9.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/picomatch": "^4.0.3",
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1"
+  }
+}

@@ -1,0 +1,152 @@
+---
+import Logo from "./Logo.astro";
+import { REPO, repoFile, url } from "../lib/url";
+
+const columns: [string, [string, string][]][] = [
+  ["Product", [
+    ["Lenses", url("#lenses")],
+    ["Architecture contract", url("docs/contract/")],
+    ["Changelog", url("changelog/")],
+    ["Roadmap", url("docs/roadmap/")],
+  ]],
+  ["Developers", [
+    ["Docs", url("docs/")],
+    ["GitHub", REPO],
+    ["GitHub Action", url("docs/github-action/")],
+    ["MCP server", url("docs/mcp/")],
+    ["Contributing", repoFile("CONTRIBUTING.md")],
+  ]],
+  ["Company", [
+    ["tanziro.com", "https://tanziro.com"],
+    ["Architecture audits", url("#audit")],
+    ["Security", repoFile("SECURITY.md")],
+    ["License", repoFile("LICENSE")],
+  ]],
+];
+---
+
+<footer class="footer">
+  <div class="inner">
+    <div class="top">
+      <div class="brand">
+        <Logo />
+        <p>Open-source code review that checks the structure, not just the diff.</p>
+      </div>
+      <nav class="columns" aria-label="Footer">
+        {columns.map(([heading, links]) => (
+          <div>
+            <h2>{heading}</h2>
+            <ul>{links.map(([label, href]) => <li><a href={href}>{label}</a></li>)}</ul>
+          </div>
+        ))}
+      </nav>
+    </div>
+    <div class="bottom">
+      <p>© 2026 Plumbline · MIT License · Built by <a href="https://tanziro.com">tanziro.com</a></p>
+      <p>v1.0</p>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .footer {
+    padding: 56px var(--gutter) 36px;
+    background: var(--bg-canvas);
+  }
+  .inner {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+  .top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 40px;
+  }
+  .brand {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    flex: none;
+    width: 340px;
+  }
+  .brand p {
+    max-width: 300px;
+    font-size: 14px;
+    line-height: 21px;
+    color: var(--text-secondary);
+  }
+  .columns {
+    display: flex;
+    gap: 72px;
+  }
+  .columns > div {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  h2 {
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 14px;
+    letter-spacing: 0.88px;
+    text-transform: uppercase;
+  }
+  ul {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  li a {
+    display: block;
+    font-size: 14px;
+    line-height: 18px;
+    color: var(--text-secondary);
+    transition: color 120ms ease;
+  }
+  li a:hover {
+    color: var(--text-primary);
+  }
+  .bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding-top: 20px;
+    border-top: 1px solid var(--rule);
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 16px;
+  }
+  .bottom a {
+    color: var(--text-secondary);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  @media (max-width: 1023px) {
+    .top {
+      flex-direction: column;
+    }
+    .brand {
+      width: 100%;
+    }
+  }
+  @media (max-width: 767px) {
+    .columns {
+      flex-wrap: wrap;
+      gap: 32px 48px;
+    }
+    li a {
+      display: inline-block;
+      padding: 3px 0;
+    }
+    .bottom {
+      align-items: flex-start;
+    }
+  }
+</style>

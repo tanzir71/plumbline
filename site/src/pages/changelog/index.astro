@@ -1,0 +1,8 @@
+---
+import Prose from "../../layouts/Prose.astro";
+import { changelogHtml } from "../../lib/content";
+---
+
+<Prose title="Changelog — Plumbline" description="Release notes for Plumbline." canonicalPath="changelog/" heading="Changelog">
+  <Fragment set:html={changelogHtml()} />
+</Prose>

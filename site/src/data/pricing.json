@@ -1,0 +1,54 @@
+{
+  "_rule": "Prices are data, not copy. Re-verify before launch; CI fails if any checkedAt is older than 90 days. Evidence = archiveUrl (Wayback Machine snapshot), never screenshots of competitor pages.",
+  "scenarioDefaults": { "developers": 25, "prsPerMonth": 500, "reviewsPerPr": 1, "billing": "annual" },
+  "vendors": [
+    {
+      "id": "claude-code-review",
+      "name": "Claude Code Review",
+      "model": "per_review",
+      "label": "$15–25 per review, billed on tokens",
+      "low": 15,
+      "high": 25,
+      "notes": "Anthropic's published average; reviews on every push multiply cost.",
+      "sourceUrl": "https://claude.com/blog/code-review",
+      "archiveUrl": "",
+      "checkedAt": "2026-11-21"
+    },
+    {
+      "id": "greptile-pro",
+      "name": "Greptile Pro",
+      "model": "per_review",
+      "label": "$1 per credit, 1–3 credits per review",
+      "low": 1,
+      "high": 3,
+      "notes": "No seat fees. Base review 1 credit, Plus 3, Apex 10.",
+      "sourceUrl": "https://www.greptile.com/pricing",
+      "archiveUrl": "",
+      "checkedAt": "2026-11-21"
+    },
+    {
+      "id": "coderabbit-essentials",
+      "name": "CodeRabbit Essentials",
+      "model": "per_seat",
+      "label": "$24 per developer, billed annually",
+      "annual": 24,
+      "monthly": 30,
+      "notes": "Per developer per month; $30 month-to-month.",
+      "sourceUrl": "https://docs.coderabbit.ai/management/plans",
+      "archiveUrl": "",
+      "checkedAt": "2026-11-21"
+    },
+    {
+      "id": "plumbline",
+      "name": "Plumbline",
+      "model": "free",
+      "label": "MIT. Your agent plan or API key",
+      "low": 0,
+      "high": 0,
+      "notes": "Model usage billed by the user's own provider.",
+      "sourceUrl": "https://github.com/tanzir71/plumbline",
+      "archiveUrl": "",
+      "checkedAt": "2026-11-21"
+    }
+  ]
+}

@@ -1,0 +1,483 @@
+---
+import Button from "./Button.astro";
+import CopyButton from "./CopyButton.astro";
+import FindingRow from "./FindingRow.astro";
+import snippets from "../data/snippets.json";
+import { REPO, url } from "../lib/url";
+
+const glance = [
+  ["Runs in", "Claude Code, Codex, OpenCode, CI, MCP"],
+  ["Models", "Your key, any provider your agent supports"],
+  ["Data", "Leaves only for your model endpoint"],
+  ["Severity", "P0–P3, proof required on P0 and P1"],
+  ["Output", "PR comment, terminal, JSON, SARIF"],
+  ["License", "MIT. No account, no Plumbline servers"],
+];
+
+const labels: [string, number, number][] = [
+  ["api/invoices", 220, 27],
+  ["billing", 100, 139],
+  ["users/session", 335, 139],
+  ["orgs", 100, 253],
+  ["db/invoices", 335, 253],
+];
+---
+
+<section class="hero" aria-labelledby="hero-title">
+  <div class="inner">
+    <div class="top">
+      <div class="text">
+        <p class="pill"><span class="dot"></span>Open source · MIT · bring your own keys</p>
+        <h1 id="hero-title"><span>Review the structure,</span><span class="second">not just the diff.</span></h1>
+        <p class="lead">
+          Plumbline is an open-source code reviewer that runs inside Claude Code, Codex and OpenCode. It hunts regressions like the hosted bots, then checks every PR against the architecture your team agreed on, and proves every serious finding.
+        </p>
+        <div class="cta">
+          <div class="install">
+            <span class="prompt" aria-hidden="true">$</span>
+            <code>{snippets.skillInstall}</code>
+            <CopyButton text={snippets.skillInstall} label="Copy install command" />
+          </div>
+          <Button href={REPO}>Star on GitHub</Button>
+          <Button href={url("docs/")}>Docs</Button>
+        </div>
+      </div>
+
+      <div class="glance">
+        <div class="glance-head"><h2>AT A GLANCE</h2><span>v1.0</span></div>
+        <dl>
+          {glance.map(([key, value]) => <div><dt>{key}</dt><dd>{value}</dd></div>)}
+        </dl>
+      </div>
+    </div>
+
+    <div class="shot-wrap">
+      <figure class="shot" aria-label="Example Plumbline review of a pull request">
+        <figcaption class="bar">
+          <span class="bar-left"><span class="cmd">plumbline review</span><span class="pr">PR #482 &nbsp;·&nbsp; feat: org-level invoices</span></span>
+          <span class="stats">6 lenses &nbsp;·&nbsp; 3 findings</span>
+        </figcaption>
+        <div class="body">
+          <div class="findings">
+            <div class="score">
+              <p class="value">3/5</p>
+              <div>
+                <p class="verdict">Merge after fixes</p>
+                <p class="counts">2 × P1 &nbsp;·&nbsp; 1 × P2 &nbsp;·&nbsp; 14 checks passed</p>
+              </div>
+            </div>
+            <FindingRow
+              severity="P1"
+              lens="architecture"
+              title="New import creates a cycle: billing -> users/session -> billing"
+              body="billing/invoice.ts now imports users/session to read the org. users/session already depends on billing for plan limits."
+              proof="proof: dependency graph diff + rule ADR-012"
+            />
+            <FindingRow
+              severity="P1"
+              lens="pattern"
+              title="listAll() skips the org_id scope used by 23 of 23 sibling methods"
+              body="InvoiceRepo.listAll() reads across tenants. Every other repository method filters by org_id first."
+              proof="proof: failing test invoice.tenant.spec.ts"
+            />
+            <FindingRow
+              severity="P2"
+              lens="migration"
+              title="Dropping invoices.legacy_total breaks the rolling deploy"
+              body="Old pods keep reading the column until the rollout finishes. Ship it as expand, migrate, contract."
+              proof="proof: deploy-order check"
+            />
+          </div>
+
+          <div class="diff">
+            <p class="micro">DEPENDENCY DIFF</p>
+            <svg class="graph" width="440" height="290" viewBox="0 0 440 290" fill="none" role="img" aria-label="Dependency graph. A new edge from billing to users/session closes a cycle, because users/session already depends on billing.">
+              <path d="M200 44L110 122" stroke="#353C46" stroke-width="1.5"></path>
+              <path d="M250 44L330 122" stroke="#353C46" stroke-width="1.5"></path>
+              <path d="M260 131H161" stroke="#353C46" stroke-width="1.5"></path>
+              <path d="M161 131L168 126.5M161 131L168 135.5" stroke="#353C46" stroke-width="1.5"></path>
+              <path d="M160 148H258" stroke="#FF6B81" stroke-width="2"></path>
+              <path d="M259 148L251.5 143.5M259 148L251.5 152.5" stroke="#FF6B81" stroke-width="2"></path>
+              <path d="M100 156V236" stroke="#353C46" stroke-width="1.5"></path>
+              <path d="M150 156L300 236" stroke="#353C46" stroke-width="1.5"></path>
+              <rect x="150" y="10" width="140" height="34" rx="6" fill="#1E242C"></rect>
+              <rect x="40" y="122" width="120" height="34" rx="6" fill="#1E242C"></rect>
+              <rect x="260" y="122" width="150" height="34" rx="6" fill="#1E242C"></rect>
+              <rect x="40" y="236" width="120" height="34" rx="6" fill="#1E242C"></rect>
+              <rect x="260" y="236" width="150" height="34" rx="6" fill="#1E242C"></rect>
+              {labels.map(([t, x, y]) => <text x={x} y={y} text-anchor="middle" dominant-baseline="central">{t}</text>)}
+            </svg>
+            <div class="legend">
+              <span><i style="background: var(--line-edge)"></i>existing edge</span>
+              <span><i style="background: var(--sev-p0)"></i>added in this PR</span>
+            </div>
+            <div class="broken">
+              <p class="rule-name">forbid: billing -&gt; users/*</p>
+              <p>ADR-012 · billing must stay deployable on its own</p>
+            </div>
+          </div>
+        </div>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<style>
+  .hero {
+    padding: 64px var(--gutter) var(--section-y);
+    background: var(--bg-canvas);
+    overflow: clip;
+  }
+  .inner {
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+  }
+  .top {
+    display: flex;
+    align-items: center;
+    gap: 64px;
+  }
+  .text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 22px;
+    flex: 0 1 640px;
+    min-width: 0;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 10px;
+    border-radius: var(--r-pill);
+    background: var(--bg-raised);
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 16px;
+  }
+  .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent-plumb);
+  }
+  h1 {
+    font-size: 52px;
+    font-weight: 600;
+    line-height: 56px;
+    letter-spacing: -1.56px;
+  }
+  h1 span {
+    display: block;
+  }
+  h1 .second {
+    color: var(--text-secondary);
+  }
+  .lead {
+    max-width: 580px;
+    font-size: 17px;
+    line-height: 27px;
+    color: var(--text-secondary);
+  }
+  .cta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    padding-top: 6px;
+  }
+  .install {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    max-width: 100%;
+    padding: 5px 5px 5px 16px;
+    border-radius: var(--r-md);
+    background: var(--bg-raised);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 17px;
+  }
+  .install code {
+    min-width: 0;
+    font-size: 13px;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .prompt {
+    color: var(--text-muted);
+  }
+
+  .glance {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex: 1 1 0;
+    min-width: 0;
+  }
+  .glance-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--rule);
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 14px;
+  }
+  .glance-head h2 {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.88px;
+  }
+  dl {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  dl div {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  dt {
+    flex: none;
+    width: 92px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 14px;
+    letter-spacing: 0.66px;
+    text-transform: uppercase;
+  }
+  dd {
+    font-size: 13px;
+    line-height: 18px;
+    color: var(--text-primary);
+  }
+
+  .shot-wrap {
+    position: relative;
+    isolation: isolate;
+  }
+  /* Glow lives in the background, centred on the shot's edges, so only a halo shows. */
+  .shot-wrap::before {
+    content: "";
+    position: absolute;
+    inset: -200px;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(190px 380px at 200px calc(200px + (100% - 400px) * 0.55), rgb(110 231 200 / 0.15), transparent 100%),
+      radial-gradient(520px 140px at 50% calc(100% - 200px), rgb(143 162 255 / 0.19), transparent 100%),
+      radial-gradient(160px 280px at calc(100% - 200px) calc(200px + (100% - 400px) * 0.25), rgb(183 155 255 / 0.08), transparent 100%);
+  }
+  .shot {
+    border-radius: var(--r-2xl);
+    background: var(--bg-surface);
+    overflow: hidden;
+  }
+  .bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 24px;
+    background: var(--bg-raised);
+    line-height: 17px;
+  }
+  .bar-left {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 14px;
+    font-size: 13px;
+  }
+  .cmd {
+    font-family: var(--font-mono);
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+  .pr {
+    color: var(--text-secondary);
+  }
+  .stats {
+    flex: none;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+  .body {
+    display: flex;
+    align-items: stretch;
+  }
+  .findings {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex: 0 1 680px;
+    min-width: 0;
+    padding: 24px;
+  }
+  .score {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding-bottom: 6px;
+  }
+  .value {
+    font-size: 48px;
+    line-height: 62px;
+    font-weight: 600;
+    letter-spacing: -1.44px;
+    color: var(--text-primary);
+  }
+  .score > div {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .verdict {
+    font-size: 17px;
+    line-height: 22px;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+  .counts {
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 16px;
+  }
+  .diff {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 24px;
+    background: var(--bg-inset);
+  }
+  .graph {
+    max-width: 100%;
+    height: auto;
+  }
+  .graph text {
+    fill: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 16px;
+  }
+  .legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .legend i {
+    width: 16px;
+    height: 2px;
+  }
+  .broken {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px 14px;
+    border-radius: var(--r-md);
+    background: color-mix(in srgb, var(--sev-p0) var(--tint-alert), transparent);
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 16px;
+  }
+  .rule-name {
+    color: var(--sev-p0);
+    font-weight: 500;
+  }
+
+  @media (max-width: 1279px) {
+    .top {
+      gap: 40px;
+    }
+    .glance {
+      flex-basis: 320px;
+    }
+    dl div {
+      align-items: flex-start;
+    }
+    .findings {
+      flex: 1 1 58%;
+    }
+    .diff {
+      flex: 1 1 42%;
+    }
+  }
+  @media (max-width: 1023px) {
+    .top {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .text {
+      flex-basis: auto;
+    }
+    .glance {
+      flex-basis: auto;
+    }
+    h1 {
+      font-size: 44px;
+      line-height: 48px;
+    }
+    .body {
+      flex-direction: column;
+    }
+    .findings,
+    .diff {
+      flex: none;
+    }
+    .graph {
+      align-self: center;
+    }
+  }
+  @media (max-width: 767px) {
+    h1 {
+      font-size: 36px;
+      line-height: 40px;
+      letter-spacing: -1.08px;
+    }
+    .hero {
+      padding-top: 32px;
+    }
+    .install {
+      width: 100%;
+    }
+    .install code {
+      flex: 1;
+    }
+    .bar {
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 14px 16px;
+    }
+    .findings,
+    .diff {
+      padding: 16px;
+    }
+    dt {
+      width: 76px;
+    }
+  }
+</style>

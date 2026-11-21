@@ -1,0 +1,10 @@
+{
+  "findings": [
+    {
+      "lens": "L03",
+      "severity": "P1",
+      "proof": "failing_test",
+      "file": "src/repo/invoices.js"
+    }
+  ]
+}

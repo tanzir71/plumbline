@@ -1,0 +1,88 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      packages: ${{ steps.filter.outputs.packages }}
+      site: ${{ steps.filter.outputs.site }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - id: filter
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD: ${{ github.sha }}
+        run: |
+          if [ -z "$BASE" ] || ! git cat-file -e "$BASE^{commit}" 2>/dev/null; then
+            files="$(git ls-files)"
+          else
+            files="$(git diff --name-only "$BASE" "$HEAD")"
+          fi
+          shared='^(package\.json|pnpm-lock\.yaml|pnpm-workspace\.yaml|tsconfig\.base\.json|eslint\.config\.mjs|scripts/|\.github/workflows/ci\.yml)'
+          if echo "$files" | grep -qE "$shared|^(packages|skills|fixtures|action\.yml|ci/)"; then echo "packages=true" >> "$GITHUB_OUTPUT"; else echo "packages=false" >> "$GITHUB_OUTPUT"; fi
+          if echo "$files" | grep -qE "$shared|^(site|docs|skills/plumbline/lenses|CHANGELOG\.md)"; then echo "site=true" >> "$GITHUB_OUTPUT"; else echo "site=false" >> "$GITHUB_OUTPUT"; fi
+
+  packages:
+    needs: changes
+    if: needs.changes.outputs.packages == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter "./packages/**" build
+      - run: pnpm lint
+      - run: pnpm --filter "./packages/**" test
+      - run: node scripts/check-repo.mjs
+
+  windows-cli:
+    needs: changes
+    if: needs.changes.outputs.packages == 'true'
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter "./packages/**" build
+      - run: pnpm --filter @plumbline/cli test
+
+  site:
+    needs: changes
+    if: needs.changes.outputs.site == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: node scripts/check-pricing.mjs
+      - run: pnpm --filter site build
+      - run: node scripts/check-links.mjs
+      - run: node scripts/check-site-css.mjs
+      - run: pnpm --filter site test:e2e
+      - run: node scripts/check-lighthouse.mjs

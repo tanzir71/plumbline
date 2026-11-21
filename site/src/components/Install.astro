@@ -1,0 +1,315 @@
+---
+import CopyButton from "./CopyButton.astro";
+import SectionHead from "./SectionHead.astro";
+import snippets from "../data/snippets.json";
+
+const esc = (s: string) => s.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+
+/** Prompts muted, output secondary, the command and `kept` in accent, the score in primary. */
+function colourSkill(text: string): string {
+  return text
+    .split("\n")
+    .map((line) => {
+      const safe = esc(line);
+      if (line.startsWith("$ ")) return `<span class="m">$</span> ${safe.slice(2)}`;
+      if (line.startsWith("> ")) return `<span class="m">&gt;</span> <span class="a">${safe.slice(5)}</span>`;
+      return `<span class="o">${safe.replace("3/5", '<span class="p">3/5</span>').replace("kept", '<span class="a">kept</span>')}</span>`;
+    })
+    .join("\n");
+}
+
+const colourPlain = (text: string) =>
+  text
+    .split("\n")
+    .map((line) => (line.trimStart().startsWith("#") ? `<span class="m">${esc(line)}</span>` : esc(line)))
+    .join("\n");
+
+const tabs = [
+  {
+    id: "skill",
+    label: "Skill",
+    file: "terminal",
+    html: colourSkill(snippets.skill),
+    copy: `${snippets.skillInstall}\nclaude\n/plumbline review`,
+    facts: [
+      ["Runs in your agent", "Claude Code, Codex, OpenCode, or anything that loads Agent Skills."],
+      ["Uses your plan or key", "Model calls go straight from your machine to your provider."],
+      ["Read-only by default", "Writes nothing to your repo unless you choose review-and-fix."],
+    ],
+  },
+  {
+    id: "action",
+    label: "GitHub Action",
+    file: "workflow",
+    html: colourPlain(snippets.githubAction),
+    copy: snippets.githubAction,
+    facts: [
+      ["Runs on your runners", "Hosted or self-hosted. A private repo spends your own Actions minutes."],
+      ["Uses your key", "Stored as a repository secret and sent only to your model provider."],
+      ["A person approves", "It can fail a check and add a label. It never approves or merges."],
+    ],
+  },
+  {
+    id: "gitlab",
+    label: "GitLab CI",
+    file: ".gitlab-ci.yml",
+    html: colourPlain(snippets.gitlab),
+    copy: snippets.gitlab,
+    facts: [
+      ["Runs in your pipelines", "On merge request pipelines, on gitlab.com or self-managed."],
+      ["Uses your key", "Set as a masked CI/CD variable and sent only to your model provider."],
+      ["A person approves", "It can fail the pipeline and add a label. It never approves or merges."],
+    ],
+  },
+  {
+    id: "mcp",
+    label: "MCP server",
+    file: "mcp config",
+    html: esc(snippets.mcp),
+    copy: snippets.mcp,
+    facts: [
+      ["Works with any client", "Exposes scope, graph diff, contract check, lenses and reports."],
+      ["No model of its own", "The calling agent does the judging, on your plan or key."],
+      ["Runs locally", "A stdio server on your machine, with no Plumbline backend."],
+    ],
+  },
+];
+---
+
+<section id="install" class="section bg-canvas" aria-labelledby="install-title">
+  <div class="inner stack">
+    <SectionHead
+      id="install-title"
+      num="08"
+      label="Install"
+      lines={["Four ways in.", "Same engine."]}
+      lead="Start local, then put it in CI once you trust it. Every surface runs the same lenses and the same proof rules."
+    />
+
+    <div class="panel" data-tabs>
+      <div class="tabs" role="tablist" aria-label="Install options">
+        {tabs.map((t, i) => (
+          <button
+            type="button"
+            role="tab"
+            id={`tab-${t.id}`}
+            aria-controls={`panel-${t.id}`}
+            aria-selected={i === 0 ? "true" : "false"}
+            tabindex={i === 0 ? 0 : -1}
+          >{t.label}</button>
+        ))}
+      </div>
+
+      {tabs.map((t, i) => (
+        <div class="tabpanel" role="tabpanel" id={`panel-${t.id}`} aria-labelledby={`tab-${t.id}`} hidden={i !== 0}>
+          <div class="code">
+            <div class="code-head"><span>{t.file}</span><CopyButton text={t.copy} label={`Copy ${t.label} snippet`} tone="plain" /></div>
+            <pre tabindex="0" aria-label={`${t.label} snippet`}><code set:html={t.html} /></pre>
+          </div>
+          <ol class="facts">
+            {t.facts.map(([title, body], n) => (
+              <li><span class="n">{`0${n + 1}`}</span><div><h3>{title}</h3><p>{body}</p></div></li>
+            ))}
+          </ol>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .stack {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+  .panel {
+    border-radius: var(--r-2xl);
+    background: var(--bg-surface);
+    overflow: hidden;
+  }
+  .tabs {
+    display: flex;
+    align-items: flex-end;
+    gap: 32px;
+    padding: 0 32px;
+    background: var(--bg-raised);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  [role="tab"] {
+    flex: none;
+    padding: 18px 0;
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 18px;
+  }
+  [role="tab"]:hover {
+    color: var(--text-primary);
+  }
+  [role="tab"][aria-selected="true"] {
+    padding-bottom: 16px;
+    border-bottom: 2px solid var(--accent-plumb);
+    color: var(--text-primary);
+  }
+  [role="tab"]:focus-visible {
+    outline-offset: -2px;
+  }
+  .tabpanel {
+    display: flex;
+    align-items: flex-start;
+    gap: 40px;
+    padding: 24px;
+  }
+  .tabpanel[hidden] {
+    display: none;
+  }
+  .code {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    flex: none;
+    width: 660px;
+    min-height: 272px;
+    padding: 24px;
+    border-radius: var(--r-lg);
+    background: var(--bg-canvas);
+  }
+  .code-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 16px;
+  }
+  pre {
+    overflow-x: auto;
+    color: var(--text-primary);
+    font-size: 14px;
+    line-height: 24px;
+  }
+  pre :global(.m) {
+    color: var(--text-muted);
+  }
+  pre :global(.o) {
+    color: var(--text-secondary);
+  }
+  pre :global(.a) {
+    color: var(--accent-plumb);
+  }
+  pre :global(.p) {
+    color: var(--text-primary);
+  }
+  .facts {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    flex: 1 1 0;
+    min-width: 0;
+    padding-top: 8px;
+  }
+  .facts li {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  .n {
+    color: var(--accent-plumb);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 20px;
+  }
+  .facts div {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  h3 {
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 21px;
+    color: var(--text-primary);
+  }
+  .facts p {
+    font-size: 14px;
+    line-height: 21px;
+    color: var(--text-secondary);
+  }
+
+  @media (max-width: 1279px) {
+    .code {
+      flex: 1 1 60%;
+      width: auto;
+      min-width: 0;
+    }
+    .facts {
+      flex: 1 1 40%;
+    }
+  }
+  @media (max-width: 1023px) {
+    .tabpanel {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .code,
+    .facts {
+      flex: none;
+    }
+    .code {
+      min-height: 0;
+    }
+  }
+  @media (max-width: 767px) {
+    .tabs {
+      gap: 20px;
+      padding: 0 16px;
+    }
+    .tabpanel {
+      padding: 16px;
+    }
+    .code {
+      padding: 16px;
+    }
+    pre {
+      font-size: 12px;
+      line-height: 20px;
+    }
+  }
+</style>
+
+<script>
+  for (const root of document.querySelectorAll<HTMLElement>("[data-tabs]")) {
+    const tabs = [...root.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
+
+    const select = (tab: HTMLButtonElement, focus: boolean) => {
+      for (const t of tabs) {
+        const on = t === tab;
+        t.setAttribute("aria-selected", String(on));
+        t.tabIndex = on ? 0 : -1;
+        const panel = document.getElementById(t.getAttribute("aria-controls") ?? "");
+        if (panel) panel.hidden = !on;
+      }
+      if (focus) tab.focus();
+    };
+
+    tabs.forEach((tab, i) => {
+      tab.addEventListener("click", () => select(tab, false));
+      tab.addEventListener("keydown", (e) => {
+        const target =
+          e.key === "ArrowRight" ? tabs[(i + 1) % tabs.length]
+          : e.key === "ArrowLeft" ? tabs[(i - 1 + tabs.length) % tabs.length]
+          : e.key === "Home" ? tabs[0]
+          : e.key === "End" ? tabs[tabs.length - 1]
+          : undefined;
+        if (target) {
+          e.preventDefault();
+          select(target, true);
+        }
+      });
+    });
+  }
+</script>
