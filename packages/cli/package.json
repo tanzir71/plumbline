@@ -26,13 +26,14 @@
   "files": [
     "bin",
     "dist",
-    "lenses"
+    "lenses",
+    "skill"
   ],
   "publishConfig": {
     "access": "public"
   },
   "scripts": {
-    "build": "tsup && node ../../scripts/copy-lenses.mjs",
+    "build": "tsup && node ../../scripts/copy-lenses.mjs && node ../../scripts/copy-skill.mjs cli",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },

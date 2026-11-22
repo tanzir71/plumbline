@@ -17,6 +17,26 @@ function isLocal(resolved: string, coreModule: boolean, couldNotResolve: boolean
   return !coreModule && !couldNotResolve && !toPosix(resolved).includes("node_modules/");
 }
 
+let cruising: Promise<unknown> = Promise.resolve();
+
+/**
+ * dependency-cruiser resolves tsconfig `paths` without a `baseUrl` from the process working directory.
+ * Run one pass at a time from the graph's own folder, so aliases cannot resolve into another checkout.
+ */
+function fromDirectory<T>(dir: string, work: () => Promise<T>): Promise<T> {
+  const next = cruising.then(async () => {
+    const previous = process.cwd();
+    process.chdir(dir);
+    try {
+      return await work();
+    } finally {
+      process.chdir(previous);
+    }
+  });
+  cruising = next.catch(() => undefined);
+  return next;
+}
+
 /** Build the file-level import graph of a directory with dependency-cruiser. */
 export async function buildGraph(dir: string): Promise<ImportGraph> {
   const options: ICruiseOptions = {
@@ -45,7 +65,7 @@ export async function buildGraph(dir: string): Promise<ImportGraph> {
     }
   }
 
-  const { output } = await cruise(["."], options, {}, transpile);
+  const { output } = await fromDirectory(dir, () => cruise(["."], options, {}, transpile));
   const result = output as ICruiseResult;
   const files = new Set<string>();
   const edges = new Map<string, GraphEdge>();

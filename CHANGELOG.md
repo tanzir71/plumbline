@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- `plumbline review [PR | branch | commit]`: one command that runs the checks, starts your signed-in Codex or Claude Code, and scores the result
+- `plumbline benchmark`: compare reviewers on your own labelled PRs, import SARIF, JSON or GitHub comments, and compare runs while tuning lenses and contracts
+
+### Fixed
+
+- Import aliases without a `baseUrl` no longer resolve into the wrong checkout, which could report existing cycles as new
+- `graph` now stays on the target pinned by `scope` until the checkout moves
+- Committed scopes now build both graphs the same way
+- A read-only `.git` folder in an agent sandbox no longer stops a run
+
 ## 1.0.0 (2026-11-22)
 
 The first release of Plumbline: an open-source code reviewer that checks the structure, not just the diff.

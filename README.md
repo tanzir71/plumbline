@@ -65,9 +65,10 @@ include:
 **CLI**
 
 ```bash
-npx -y @tanziro/plumbline init
-npx -y @tanziro/plumbline graph --base main
-npx -y @tanziro/plumbline check
+npm install -g @tanziro/plumbline
+plumbline review         # current branch, using your signed-in Codex or Claude Code
+plumbline review 123     # a GitHub PR
+plumbline benchmark init # compare reviewers on your own labelled PRs
 ```
 
 The CLI package is `@tanziro/plumbline`. The unscoped npm package `plumbline` is an unrelated project.

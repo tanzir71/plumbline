@@ -4,19 +4,34 @@ description: The deterministic commands, for any terminal or CI.
 order: 3
 ---
 
-The CLI needs no model. Run it with `npx`, or install it:
+Install it once, then use it in any repository:
 
 ```bash
-npx -y @tanziro/plumbline --help
-npm install -D @tanziro/plumbline
+npm install -g @tanziro/plumbline
+plumbline review
 ```
 
 The package is `@tanziro/plumbline` and its command is `plumbline`. The unscoped npm package named `plumbline` is an unrelated project, so **don't run `npx` with the bare name**.
+
+## Review a PR
+
+```bash
+plumbline review              # current branch and uncommitted work
+plumbline review 123          # a GitHub PR, without checking it out
+plumbline review feature/x    # a branch
+plumbline review --agent claude --model <id>
+```
+
+`review` runs the graph and rule checks, starts your signed-in Codex or Claude Code, then scores the result and writes the report. It uses Codex first if both are ready. Set `PLUMBLINE_AGENT` to change the default. Run it from a normal terminal, because an agent's sandbox blocks the nested agent from reaching its model.
+
+The agent can't edit tracked files, comment on a PR, approve or merge. Codex runs in its workspace sandbox. Claude Code gets read-only tools and can write only the run's findings file, so it doesn't run proof tests. Use `--no-agent` to run the graph and rule checks without a model.
 
 ## Commands
 
 | Command | What it does |
 |---|---|
+| `plumbline review [target]` | Runs the full review with your signed-in agent |
+| `plumbline benchmark <action>` | Compares reviewers on your labelled PRs: `init`, `run`, `score`, `compare`. See [Benchmark](../benchmark/) |
 | `plumbline init` | Writes a `plumbline.yml` skeleton, guessing modules from your folders |
 | `plumbline scope [target]` | Pins the diff range and collects rule files. Target: branch, commit or PR |
 | `plumbline graph --base <ref>` | Diffs the JS/TS import graph between base and HEAD |
@@ -31,9 +46,13 @@ Every command takes `--json` for machine-readable output.
 
 | Option | Commands | Meaning |
 |---|---|---|
-| `--base <ref>` | scope, graph, report | Base branch or ref. Default: `dev`, then `main`, then `master` |
+| `--base <ref>` | review, scope, graph, report | Base branch or ref. Default: `dev`, then `main`, then `master` |
+| `--agent <codex\|claude>` | review, benchmark run | Which signed-in agent reviews |
+| `--model <id>` | review, benchmark run | Model for that agent |
+| `--no-agent` | review, benchmark run | Graph and rule checks only |
+| `--yes` | benchmark run | Confirm that the run uses your model account |
 | `--gate` | report | Exit 1 when the score is below the contract's minimum |
-| `--run <id>` | report, prove | Use a specific run. Default: the latest |
+| `--run <id>` | report, prove, benchmark score | Use a specific run. Default: the latest |
 | `--findings <file>` | report | Read model findings from a file |
 | `--base-branch <name>` | report | Branch name used to match `gate` entries |
 | `--contract-from <head\|base>` | graph, report | Which commit's contract to apply. CI uses `base` |
@@ -41,7 +60,7 @@ Every command takes `--json` for machine-readable output.
 | `--semgrep` | check | Run `check: semgrep` rules, if Semgrep is installed |
 | `--allow-custom-checks` | check | Run `check: custom` commands from the contract |
 | `--passed-on-base`, `--failed-on-base` | prove | Record how the test behaved on the base commit |
-| `--force` | init | Replace an existing `plumbline.yml` |
+| `--force` | init, benchmark init | Replace an existing `plumbline.yml` or benchmark suite |
 
 ## Exit codes
 

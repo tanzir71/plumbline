@@ -1,12 +1,24 @@
 import { parseArgs } from "node:util";
 import { ContractError, NothingToReviewError, formatCounts, formatCycle, formatScope, renderMarkdown } from "@tanziro/plumbline-core";
+import {
+  benchmarkCompare,
+  benchmarkInit,
+  benchmarkRun,
+  benchmarkScore,
+  formatComparison,
+  formatSummary,
+  plannedCases,
+} from "./benchmark.js";
 import { VERSION, runCheck, runGraph, runInit, runProve, runReport, startScope } from "./lib.js";
+import { runReview } from "./review.js";
 
 const HELP = `plumbline ${VERSION}: review the structure, not just the diff.
 
 Usage: plumbline <command> [options]
 
 Commands
+  review [target]          Run the full review with your signed-in agent. Target: PR, branch or commit
+  benchmark <action>       Compare reviewers on your own labelled PRs: init, run, score, compare
   init                     Write a plumbline.yml skeleton, guessing modules from folders
   scope [target]           Pin the diff range and collect rule files. Target: branch, commit or PR
   graph                    Diff the JS/TS import graph between base and HEAD
@@ -20,6 +32,9 @@ Options
   --json                   Machine-readable output
   --help, --version
 
+review    --agent <codex|claude>  --model <id>  --no-agent
+benchmark run [case ...] --yes  --agent <codex|claude>  --model <id>  --no-agent
+benchmark score [--run <id>]  ·  benchmark compare [before] [after]  ·  benchmark init --force
 check     --contract <file>  --semgrep  --allow-custom-checks
 report    --gate  --run <id>  --findings <file>  --base-branch <name>  --contract-from <head|base>
 prove     --run <id>  --passed-on-base  --failed-on-base
@@ -75,12 +90,76 @@ async function main(argv: string[]): Promise<number> {
       "allow-custom-checks": { type: "boolean", default: false },
       "passed-on-base": { type: "boolean", default: false },
       "failed-on-base": { type: "boolean", default: false },
+      agent: { type: "string" },
+      model: { type: "string" },
+      "no-agent": { type: "boolean", default: false },
+      yes: { type: "boolean", default: false },
     },
   });
   const cwd = process.cwd();
   const json = values.json as boolean;
+  const status = (line: string) => process.stderr.write(`${line}\n`);
 
   switch (command) {
+    case "review": {
+      const out = await runReview({
+        cwd,
+        target: positionals[0],
+        base: values.base,
+        agent: values.agent,
+        model: values.model,
+        noAgent: values["no-agent"] as boolean,
+        onStatus: status,
+      });
+      const { report } = out;
+      print(json, report, () =>
+        [
+          renderMarkdown(report).trimEnd(),
+          "",
+          `Merge score ${report.score.value}/5 (${formatCounts(report.score.counts)})`,
+          ...(out.agent ? [] : ["Graph and rule checks only. No model review ran."]),
+          `Audit trail: ${out.run.dir}`,
+        ].join("\n"),
+      );
+      return 0;
+    }
+
+    case "benchmark": {
+      const [action, ...names] = positionals;
+      switch (action) {
+        case "init": {
+          const file = benchmarkInit(cwd, values.force as boolean);
+          print(json, { file }, () => `Wrote ${file}\nAdd your labelled cases, then run: plumbline benchmark run --yes`);
+          return 0;
+        }
+        case "run": {
+          const noAgent = values["no-agent"] as boolean;
+          const cases = plannedCases(cwd, names);
+          if (!noAgent && !values.yes) {
+            process.stderr.write(
+              `This starts ${cases.length} agent review${cases.length === 1 ? "" : "s"} on your model account: ${cases.map((c) => c.id).join(", ")}.\nRun again with --yes to continue, or use --no-agent for graph and rule checks only.\n`,
+            );
+            return 1;
+          }
+          const { summary } = await benchmarkRun({ cwd, cases: names, agent: values.agent, model: values.model, noAgent, onStatus: status });
+          print(json, summary, () => formatSummary(summary));
+          return summary.blocked.length > 0 ? 1 : 0;
+        }
+        case "score": {
+          const { summary } = benchmarkScore(cwd, values.run);
+          print(json, summary, () => formatSummary(summary));
+          return summary.blocked.length > 0 ? 1 : 0;
+        }
+        case "compare": {
+          const comparison = benchmarkCompare(cwd, names[0], names[1]);
+          print(json, comparison, () => formatComparison(comparison));
+          return 0;
+        }
+        default:
+          throw new Error("usage: plumbline benchmark <init|run|score|compare>");
+      }
+    }
+
     case "init": {
       const out = runInit(cwd, values.force as boolean);
       print(json, { file: out.file, modules: out.modules }, () =>

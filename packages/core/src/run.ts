@@ -10,11 +10,15 @@ function excludeRunOutput(root: string): void {
   const rel = tryGit(root, ["rev-parse", "--git-path", "info/exclude"]);
   if (!rel) return;
   const file = isAbsolute(rel) ? rel : resolve(root, rel);
-  const existing = existsSync(file) ? readFileSync(file, "utf8") : "";
-  const missing = [".plumbline/run/", ".plumbline/proofs/"].filter((l) => !existing.split(/\r?\n/).includes(l));
-  if (missing.length === 0) return;
-  mkdirSync(dirname(file), { recursive: true });
-  appendFileSync(file, `${existing && !existing.endsWith("\n") ? "\n" : ""}${missing.join("\n")}\n`);
+  try {
+    const existing = existsSync(file) ? readFileSync(file, "utf8") : "";
+    const missing = [".plumbline/run/", ".plumbline/proofs/"].filter((l) => !existing.split(/\r?\n/).includes(l));
+    if (missing.length === 0) return;
+    mkdirSync(dirname(file), { recursive: true });
+    appendFileSync(file, `${existing && !existing.endsWith("\n") ? "\n" : ""}${missing.join("\n")}\n`);
+  } catch {
+    // Agent sandboxes often make .git read-only. The review still works; run files just show as untracked.
+  }
 }
 
 export interface RunDir {

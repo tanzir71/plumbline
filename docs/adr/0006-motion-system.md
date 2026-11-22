@@ -13,7 +13,9 @@ The original spec describes a static glow at the edges of the hero shot and the 
 - **Page motion:** content settles in on load and on scroll with CSS. Controls use short press and state transitions.
 - **Limits:** motion animates transforms, opacity, one small text blur and the position of the line gradients. Reduced motion, print and the footer pause control all leave content visible and at rest.
 - **Surfaces:** backgrounds move from blue-tinted to a near-neutral graphite, so the mint, blue and violet light reads cleanly. Cards still have no strokes.
+- **Diagrams:** the dependency graph uses a symmetric grid, rounded right-angle routing and one arrow style.
+- **Teams box:** it uses a modal layout built from tonal header, body and footer bands, with numbered steps that name what each one produces.
 
 ## Consequences
 
-This replaces the static glow recipe and the surface colours in `docs/landing-page.md`. `scripts/check-site-css.mjs` allows radial gradients only in `GlowMesh.astro`, and linear gradients only as that component's mask or on the diagram-line layers in `motion.css`.
+This replaces the static glow recipe, the surface colours, the graph layout and the teams box layout in `docs/landing-page.md`. `scripts/check-site-css.mjs` allows radial gradients only in `GlowMesh.astro`, and linear gradients only as that component's mask or on the diagram-line layers in `motion.css`.

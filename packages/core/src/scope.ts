@@ -54,6 +54,8 @@ export interface ScopeOptions {
   cwd?: string;
   target?: string;
   base?: string;
+  /** Refresh the remote base branch first, so a stale ref cannot pull other people's commits into the diff. */
+  fetchBase?: boolean;
 }
 
 const GENERATED =
@@ -280,6 +282,7 @@ export function resolveScope(options: ScopeOptions = {}): ScopeResult {
     }
     headSha = git(root, ["rev-parse", `${headRef}^{commit}`]);
     if (baseRef) {
+      if (options.fetchBase && baseRef.startsWith("origin/")) tryGit(root, ["fetch", "--quiet", "origin", baseRef.slice("origin/".length)]);
       const mb = tryGit(root, ["merge-base", baseRef, headSha]);
       if (!mb) throw new Error(`no merge base between ${baseRef} and ${shortSha(root, headSha)} (shallow clone? try: git fetch --unshallow)`);
       mergeBase = mb;

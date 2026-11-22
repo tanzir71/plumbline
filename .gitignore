@@ -19,6 +19,7 @@ Thumbs.db
 # Copied from skills/plumbline at build time
 packages/cli/lenses/
 packages/action/skill/
+packages/cli/skill/
 
 # Local agent settings
 .claude/

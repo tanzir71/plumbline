@@ -65,7 +65,8 @@ export async function runDeterministic(
   const root = scope.repo;
   const [baseRaw, head] = await Promise.all([
     buildGraphAtRef(root, scope.mergeBase),
-    scope.mode === "worktree" || scope.mode === "branch-clean" ? buildGraphIsolated(root) : buildGraphAtRef(root, scope.headSha),
+    // Only uncommitted work needs the live tree. Committed scopes compare two exports built the same way.
+    scope.mode === "worktree" ? buildGraphIsolated(root) : buildGraphAtRef(root, scope.headSha),
   ]);
   const base = applyRenames(baseRaw, new Map(Object.entries(scope.renames)));
   const diff = diffGraphs(base, head, contract);

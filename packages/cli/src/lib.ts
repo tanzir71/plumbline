@@ -57,19 +57,22 @@ interface RunMeta {
   startedAt: string;
   target?: string;
   base?: string;
+  /** The checkout when the run started. A later bare `graph` keeps the target only while this still matches. */
+  checkoutHead?: string;
 }
 
 export interface ScopeArgs {
   cwd: string;
   target?: string;
   base?: string;
+  fetchBase?: boolean;
 }
 
 /** Pin the scope and start a new run directory. */
 export function startScope(args: ScopeArgs): { scope: ScopeResult; run: RunDir } {
   const scope = resolveScope(args);
   const run = createRun(scope.repo);
-  const meta: RunMeta = { startedAt: new Date().toISOString(), target: args.target, base: args.base };
+  const meta: RunMeta = { startedAt: new Date().toISOString(), target: args.target, base: args.base, checkoutHead: resolveHead(scope.repo) };
   writeRunJson(run, "run.json", meta);
   writeRunJson(run, "scope.json", scope);
   return { scope, run };
@@ -86,14 +89,26 @@ export interface GraphArgs extends ScopeArgs {
 
 /** Reuse the latest run when it covers the same commits and has no report yet, so one review stays in one directory. */
 function continueOrStart(args: ScopeArgs): { scope: ScopeResult; run: RunDir } {
-  const scope = resolveScope(args);
-  const latest = findRun(scope.repo);
-  if (latest && !existsSync(join(latest.dir, "report.json"))) {
-    const prior = readRunJson<ScopeResult>(latest, "scope.json");
-    if (prior?.headSha === scope.headSha && prior.mergeBase === scope.mergeBase && prior.mode === scope.mode) {
-      writeRunJson(latest, "scope.json", scope);
-      return { scope, run: latest };
+  const root = repoRoot(args.cwd);
+  const latest = findRun(root);
+  const pending = latest && !existsSync(join(latest.dir, "report.json")) ? latest : null;
+  const prior = pending ? readRunJson<ScopeResult>(pending, "scope.json") : null;
+  const meta = pending ? readRunJson<RunMeta>(pending, "run.json") : null;
+  const matches = (s: ScopeResult) => prior?.headSha === s.headSha && prior.mergeBase === s.mergeBase && prior.mode === s.mode;
+
+  // A bare `graph` stays on the target `scope` pinned, until the checkout moves.
+  if (pending && !args.target && meta?.target && meta.checkoutHead === resolveHead(root)) {
+    const scope = resolveScope({ ...args, target: meta.target, base: args.base ?? meta.base });
+    if (matches(scope)) {
+      writeRunJson(pending, "scope.json", scope);
+      return { scope, run: pending };
     }
+  }
+
+  const scope = resolveScope(args);
+  if (pending && matches(scope)) {
+    writeRunJson(pending, "scope.json", scope);
+    return { scope, run: pending };
   }
   return startScope(args);
 }
