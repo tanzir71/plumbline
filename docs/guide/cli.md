@@ -24,7 +24,7 @@ plumbline review --agent claude --model <id>
 
 `review` runs the graph and rule checks, starts your signed-in Codex or Claude Code, then scores the result and writes the report. It uses Codex first if both are ready. Set `PLUMBLINE_AGENT` to change the default. Run it from a normal terminal, because an agent's sandbox blocks the nested agent from reaching its model.
 
-The agent can't edit tracked files, comment on a PR, approve or merge. Codex runs in its workspace sandbox. Claude Code gets read-only tools and can write only the run's findings file, so it doesn't run proof tests. Use `--no-agent` to run the graph and rule checks without a model.
+Plumbline never approves or merges, and the agent doesn't get your source-control or registry tokens from its environment. Codex runs in its workspace sandbox, where it can run proof tests and is told not to edit tracked files. Claude Code gets read-only tools and can write only the run's findings file, so it doesn't run proof tests. Use `--no-agent` to run the graph and rule checks without a model.
 
 ## Commands
 

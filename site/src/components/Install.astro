@@ -38,6 +38,18 @@ const tabs = [
     ],
   },
   {
+    id: "cli",
+    label: "CLI",
+    file: "terminal",
+    html: colourPlain(snippets.cli),
+    copy: snippets.cli,
+    facts: [
+      ["One command", "Runs the checks, starts your signed-in Codex or Claude Code, and scores the result."],
+      ["Uses your plan or key", "Your agent calls your model provider directly. Plumbline has no backend."],
+      ["Run it in a normal terminal", "An agent's sandbox blocks a second agent from reaching its model."],
+    ],
+  },
+  {
     id: "action",
     label: "GitHub Action",
     file: "workflow",
@@ -82,7 +94,7 @@ const tabs = [
       id="install-title"
       num="08"
       label="Install"
-      lines={["Four ways in.", "Same engine."]}
+      lines={["Five ways in.", "Same engine."]}
       lead="Start local, then put it in CI once you trust it. Every surface runs the same lenses and the same proof rules."
     />
 

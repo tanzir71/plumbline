@@ -11,7 +11,7 @@ Plumbline is an open-source code reviewer that runs with your own model keys. It
 | Surface | Runs in | Who pays for the model |
 |---|---|---|
 | [Agent Skill](./skill.md) | Claude Code, Codex, OpenCode | Your agent plan or key |
-| [CLI](./cli.md) | Any terminal or CI | No model for the deterministic commands |
+| [CLI](./cli.md) | Any terminal or CI | Your agent plan or key for `review`. No model for the deterministic commands |
 | [MCP server](./mcp.md) | Any MCP client | The calling agent |
 | [GitHub Action](./github-action.md) | Your GitHub runners | Your key, as a repository secret |
 | [GitLab CI](./gitlab.md) | Your GitLab pipelines | Your key, as a CI/CD variable |
@@ -26,14 +26,15 @@ Plumbline is an open-source code reviewer that runs with your own model keys. It
 
 ## Honest limits
 
-- The deterministic graph checks cover **JS and TS only** in v1.0. The model lenses work in any language.
+- The deterministic graph checks cover **JS and TS only**. The model lenses work in any language.
 - Static imports are what the graph sees. Dynamic imports, string-keyed registries and service calls are left to the model reviewers.
 - A model can miss things or be wrong. A person always approves. Plumbline never approves or merges a PR.
-- The GitHub Action and GitLab template have automated tests against simulated APIs, but v1.0 has not yet run them in live pipelines. Treat them as early.
-- The review flow has been run on Claude through Claude Code. Codex, OpenCode and the other model providers are supported but not yet verified end to end.
+- The GitHub Action and GitLab template have automated tests against simulated APIs, but have not yet run in live pipelines. Treat them as early.
+- The review flow has run on Claude through Claude Code and on OpenAI models through Codex. OpenCode and the other model providers are supported but not yet verified end to end.
 
 ## Next
 
 - Write your [contract](./contract.md)
+- [Benchmark](./benchmark.md) reviewers on your own PRs
 - Set up [merge gating](./gating.md) and [risk lanes](./lanes.md)
 - Read how Plumbline handles [security and data](./security.md)

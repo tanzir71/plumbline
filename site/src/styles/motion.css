@@ -380,12 +380,14 @@ svg text.signal-hit {
     }
     #lenses td.catches,
     #cost td.pricing,
-    #enterprise td.how {
+    #enterprise td.how,
+    #benchmark td.how {
       transition: color 160ms ease;
     }
     #lenses tbody tr:hover td.catches,
     #cost tbody tr:hover td.pricing,
-    #enterprise tbody tr:hover td.how {
+    #enterprise tbody tr:hover td.how,
+    #benchmark tbody tr:hover td.how {
       color: var(--text-primary);
     }
   }
@@ -410,6 +412,8 @@ svg text.signal-hit {
         #enterprise tbody tr,
         #enterprise .path,
         #install .panel,
+        #benchmark tbody tr,
+        #benchmark .note,
         .section .cols > *,
         #audit .cols > *
       ) {

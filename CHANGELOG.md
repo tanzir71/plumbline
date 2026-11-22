@@ -1,9 +1,10 @@
 # Changelog
 
-## Unreleased
+## 1.1.0 (2026-11-22)
 
 ### Added
 
+- `/plumbline compare`: one prompt that reviews a PR and compares the result with other reviewers already on it
 - `plumbline review [PR | branch | commit]`: one command that runs the checks, starts your signed-in Codex or Claude Code, and scores the result
 - `plumbline benchmark`: compare reviewers on your own labelled PRs, import SARIF, JSON or GitHub comments, and compare runs while tuning lenses and contracts
 
@@ -13,6 +14,10 @@
 - `graph` now stays on the target pinned by `scope` until the checkout moves
 - Committed scopes now build both graphs the same way
 - A read-only `.git` folder in an agent sandbox no longer stops a run
+
+### Verified
+
+- The review flow has now run through Codex on the seeded fixtures. OpenCode and the other providers are still not verified end to end
 
 ## 1.0.0 (2026-11-22)
 

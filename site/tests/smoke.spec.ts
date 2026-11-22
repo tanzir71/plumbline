@@ -367,6 +367,9 @@ test.describe("interactions", () => {
     await page.goto(HOME);
     await page.getByRole("tab", { name: "Skill" }).focus();
     await page.keyboard.press("ArrowRight");
+    await expect(page.getByRole("tab", { name: "CLI" })).toBeFocused();
+    await expect(page.getByRole("tabpanel")).toContainText("plumbline review");
+    await page.keyboard.press("ArrowRight");
     await expect(page.getByRole("tab", { name: "GitHub Action" })).toBeFocused();
     await expect(page.getByRole("tabpanel")).toContainText("tanzir71/plumbline@v1");
     await page.keyboard.press("End");

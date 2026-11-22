@@ -1,0 +1,175 @@
+---
+import arrow from "../assets/figma/arrow-14.svg?url";
+import CopyButton from "./CopyButton.astro";
+import SectionHead from "./SectionHead.astro";
+import { url } from "../lib/url";
+
+const rows = [
+  {
+    goal: "Compare one PR",
+    run: "/plumbline compare",
+    result: "Both reviews side by side, with every disagreement checked against the code.",
+  },
+  {
+    goal: "Benchmark many PRs",
+    run: "plumbline benchmark run --yes",
+    result: "Caught, missed and unlabelled comments for each reviewer, on issues you labelled.",
+  },
+  {
+    goal: "Tune for your code",
+    run: "plumbline benchmark compare",
+    result: "What each lens or contract edit newly caught or missed.",
+  },
+];
+---
+
+<section id="benchmark" class="section bg-surface" aria-labelledby="benchmark-title">
+  <div class="inner stack">
+    <SectionHead
+      id="benchmark-title"
+      num="09"
+      label="Benchmark"
+      lines={["Test it on", "your own PRs."]}
+      lead="Compare Plumbline with the reviewer you already run, then tune it for your codebase. Results stay on your machine, and we publish no scores."
+    >
+      <a class="guide" href={url("docs/benchmark/")}>Read the benchmark guide <img src={arrow} alt="" width="14" height="14" /></a>
+    </SectionHead>
+
+    <div class="body">
+      <table>
+        <caption class="sr-only">Ways to compare and tune reviewers</caption>
+        <thead>
+          <tr><th scope="col">Goal</th><th scope="col">Run</th><th scope="col">What you get</th></tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr>
+              <th scope="row">{row.goal}</th>
+              <td><div class="run"><code>{row.run}</code><CopyButton text={row.run} label={`Copy ${row.run}`} tone="plain" /></div></td>
+              <td class="how">{row.result}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p class="note">In Codex, use <code>$plumbline compare</code>. Bring in other reviewers from GitHub comments, SARIF or JSON.</p>
+    </div>
+  </div>
+</section>
+
+<style>
+  .stack {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+  .guide {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 18px;
+  }
+  .body {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
+  thead th {
+    padding: 0 0 10px;
+    text-align: left;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 14px;
+    letter-spacing: 0.88px;
+    text-transform: uppercase;
+  }
+  thead th:nth-child(1) { width: 216px; }
+  thead th:nth-child(2) { width: 392px; }
+  tbody tr {
+    border-top: 1px solid var(--rule);
+  }
+  tbody tr:last-child {
+    border-bottom: 1px solid var(--rule);
+  }
+  tbody th,
+  tbody td {
+    padding: 9px 16px 9px 0;
+    text-align: left;
+    vertical-align: middle;
+  }
+  tbody th {
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 18px;
+  }
+  .run {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+  }
+  .run code {
+    min-width: 0;
+    color: var(--accent-plumb);
+    font-size: 13px;
+    line-height: 18px;
+    font-variant-ligatures: none;
+    overflow-wrap: anywhere;
+  }
+  tbody td.how {
+    padding-right: 0;
+    color: var(--text-secondary);
+    font-size: 13px;
+    line-height: 20px;
+  }
+  .note {
+    color: var(--text-muted);
+    font-size: 13px;
+    line-height: 20px;
+  }
+  .note code {
+    color: var(--text-secondary);
+    font-size: 12px;
+  }
+
+  @media (max-width: 1023px) {
+    thead th:nth-child(1) { width: 168px; }
+    thead th:nth-child(2) { width: 300px; }
+  }
+  @media (max-width: 767px) {
+    thead {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+    }
+    table,
+    tbody,
+    tr,
+    tbody th,
+    tbody td,
+    tbody td.how {
+      display: block;
+      width: 100%;
+      padding: 0;
+    }
+    tbody tr {
+      padding: 12px 0;
+    }
+    .run {
+      justify-content: space-between;
+      margin: 2px 0;
+    }
+  }
+</style>

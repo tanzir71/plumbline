@@ -1,10 +1,10 @@
 ---
 name: plumbline
-description: Pre-merge code review that checks the structure, not just the diff. Runs a deterministic import-graph and contract check, then parallel reviewers across eight lenses (regressions, boundaries, patterns, distributed systems, migrations, API contracts, agent-PR hygiene, operability). Every P0 or P1 needs proof, a failing test, a graph diff or a broken rule, or it is downgraded. The report leads with a Merge score N/5. Reviews the current branch against its base (dev, else main) plus uncommitted work, or a given branch, commit or GitHub PR. Can fix findings and re-review, loop to a target score, or draft a plumbline.yml contract from ADRs and agent rule files. Use when the user runs /plumbline or $plumbline, or asks to review a branch or changes before a PR, check architecture or boundaries, score a change, ask whether it is ready to merge, or review and fix. Edits code only when the user asks for fixes.
+description: Pre-merge code review that checks the structure, not just the diff. Runs a deterministic import-graph and contract check, then parallel reviewers across eight lenses (regressions, boundaries, patterns, distributed systems, migrations, API contracts, agent-PR hygiene, operability). Every P0 or P1 needs proof, a failing test, a graph diff or a broken rule, or it is downgraded. The report leads with a Merge score N/5. Reviews the current branch against its base (dev, else main) plus uncommitted work, or a given branch, commit or GitHub PR. Can fix findings and re-review, loop to a target score, compare a PR with another reviewer, or draft a plumbline.yml contract from ADRs and agent rule files. Use when the user runs /plumbline or $plumbline, or asks to review a branch or changes before a PR, check architecture or boundaries, score a change, ask whether it is ready to merge, or review and fix. Edits code only when the user asks for fixes.
 license: MIT
 compatibility: Needs git and Node 20+. Optional - a sub-agent tool for parallel reviewers, gh for PR mode. Graph checks cover JS/TS; the model lenses work in any language.
 metadata:
-  version: "1.0.0"
+  version: "1.1.0"
   source: https://github.com/tanzir71/plumbline
 ---
 
@@ -19,6 +19,7 @@ Pick the mode from what the user asked:
 - **Review** (`/plumbline review`, the default): steps 1-6, then stop. The report is the deliverable.
 - **Review and fix** ("review and fix", "then fix the bugs", or asking for fixes after a report): steps 1-6, then "Fixing findings" once, then a final summary.
 - **Target score** ("until 4/5", "until you get a 5/5"): repeat review and fix until the score reaches the target, as described in "Target score".
+- **Compare** (`/plumbline compare`, "compare with another reviewer", "benchmark this PR"): follow [references/compare.md](references/compare.md) and stop.
 - **Init** (`/plumbline init`): follow [references/init.md](references/init.md) and stop.
 
 Every report starts with the score heading, with no preamble, because that line tells the developer whether the change can merge and how many P1s block it:

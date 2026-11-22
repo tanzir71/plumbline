@@ -1,6 +1,6 @@
 {
   "name": "@tanziro/plumbline-action",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "CI runtime for the Plumbline GitHub Action and GitLab CI template.",
   "license": "MIT",
   "type": "module",

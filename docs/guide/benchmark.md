@@ -8,7 +8,17 @@ order: 15
 
 Reviews run with your own agent and model account. Suites and results stay on your machine. Plumbline publishes no benchmark or accuracy figures, and a result only describes the cases and labels in your suite.
 
-## Quick start
+## Compare one PR
+
+If another reviewer already runs on your PRs, install the [Agent Skill](../skill/) and ask your agent:
+
+```text
+/plumbline compare
+```
+
+In Codex, use `$plumbline compare`. Add a PR number to choose a PR, or name a reviewer to compare only with that one. There's nothing to configure. Plumbline reviews the PR first, reads the other reviews, checks each disagreement against the code and writes `comparison.md` to the run folder.
+
+## Benchmark many PRs
 
 ```bash
 plumbline benchmark init

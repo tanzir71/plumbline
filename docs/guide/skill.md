@@ -26,6 +26,7 @@ npx skills add https://github.com/tanzir71/plumbline/tree/main/skills/plumbline
 | `/plumbline review 482` | Reviews a GitHub PR (needs `gh`) |
 | `/plumbline review and fix` | Reviews, fixes the confirmed findings, then re-reviews |
 | `/plumbline review until 4/5` | Loops review and fix until the score reaches the target, for at most 5 rounds |
+| `/plumbline compare` | Reviews the PR, then compares the result with other reviewers already on it |
 | `/plumbline init` | Drafts a `plumbline.yml` from your ADRs and agent rule files, and shows you a diff to accept |
 
 In Codex, use `$plumbline` instead of `/plumbline`.
