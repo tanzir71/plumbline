@@ -28,7 +28,7 @@ Every P0 and P1 needs proof of a kind the contract accepts.
 
 | Proof | What Plumbline checks |
 |---|---|
-| `failing_test` | The test is under `.plumbline/proofs/`, and `plumbline prove` recorded it failing on this commit. It hasn't changed since. A model's claim that a test failed doesn't count |
+| `failing_test` | The test is under `.plumbline/proofs/`, and `plumbline prove` recorded it failing on this commit. It reached a test assertion rather than crashing at startup, and it hasn't changed since. A model's claim that a test failed doesn't count |
 | `graph_diff` | The cited edge or cycle really was added in this change |
 | `broken_rule` | The rule id is in the contract, or the ADR exists, and the finding cites a real file and line |
 

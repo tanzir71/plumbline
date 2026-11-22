@@ -99,6 +99,30 @@ describe("plumbline review", () => {
     expect(r.out).not.toContain("Merge score");
   }, T);
 
+  it("does not accept a proof that crashed before an assertion", () => {
+    const repo = materialize("ts-cycle");
+    cli(repo, ["scope", "--base", "main"]);
+    mkdirSync(join(repo, ".plumbline/proofs"), { recursive: true });
+    const test = ".plumbline/proofs/crash.test.mjs";
+    writeFileSync(join(repo, test), 'import "./missing-module.mjs";\n');
+    const proved = cli(repo, ["prove", test, "--json", "--", "node", test]);
+    expect(proved.code).toBe(0);
+    expect(JSON.parse(proved.out).problem).toContain("Cannot find module");
+    expect(cli(repo, ["prove", test, "--", "node", test]).out).toContain("never reached an assertion");
+
+    writeFileSync(
+      join(repo, ".plumbline/run/input.json"),
+      JSON.stringify({
+        reviewers: [{ id: "A", status: "complete" }],
+        findings: [{ severity: "P1", lens: "L01", title: "Crashed proof", body: "x", file: "src/billing/plans.ts", line: 1, proof: [{ kind: "failing_test", ref: test }] }],
+      }),
+    );
+    const report = JSON.parse(cli(repo, ["report", "--findings", ".plumbline/run/input.json", "--json"]).out);
+    const finding = report.findings.find((f: { title: string }) => f.title === "Crashed proof");
+    expect(finding.severity).toBe("P2");
+    expect(finding.downgradeReason).toContain("never reached a test assertion");
+  }, T);
+
   it("keeps the agent read-only outside its findings file", () => {
     const claude = agentArgs("claude", { skillRoot: "/skill", runId: "r1", proofTests: false });
     const allowed = claude[claude.indexOf("--allowedTools") + 1] as string;

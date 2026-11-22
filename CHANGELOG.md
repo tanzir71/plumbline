@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- A proof test that crashes, times out or fails before an assertion no longer counts as a failing test
+
 ## 1.1.0 (2026-11-22)
 
 ### Added

@@ -1,5 +1,5 @@
 import { parseArgs } from "node:util";
-import { ContractError, NothingToReviewError, formatCounts, formatCycle, formatScope, renderMarkdown } from "@tanziro/plumbline-core";
+import { ContractError, NothingToReviewError, formatCounts, formatCycle, formatScope, proofRunProblem, renderMarkdown } from "@tanziro/plumbline-core";
 import {
   benchmarkCompare,
   benchmarkInit,
@@ -218,10 +218,13 @@ async function main(argv: string[]): Promise<number> {
       if (!test) throw new Error("usage: plumbline prove <test> -- <command>");
       const passedOnBase = values["passed-on-base"] ? true : values["failed-on-base"] ? false : undefined;
       const record = runProve({ cwd, test, command: passthrough, run: values.run, passedOnBase });
-      print(json, record, () =>
+      const problem = record.exitCode === 0 ? null : proofRunProblem(record.output);
+      print(json, problem ? { ...record, problem } : record, () =>
         record.exitCode === 0
           ? `Test passed on HEAD, so it proves nothing: ${record.ref}`
-          : `Recorded failing test: ${record.ref} (exit ${record.exitCode})`,
+          : problem
+            ? `Test never reached an assertion, so it proves nothing: ${record.ref}\n  ${problem}`
+            : `Recorded failing test: ${record.ref} (exit ${record.exitCode})`,
       );
       return 0;
     }

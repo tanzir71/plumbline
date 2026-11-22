@@ -34,6 +34,30 @@ export function hashFile(file: string): string {
   return createHash("sha256").update(readFileSync(file)).digest("hex");
 }
 
+/** Added to the recorded output when a proof command times out, is killed or cannot start. */
+export const TEST_DID_NOT_FINISH = "plumbline: the test command did not finish";
+
+const ANSI = new RegExp(`${String.fromCharCode(27)}\\[[0-9;]*m`, "g");
+const DID_NOT_RUN =
+  /Startup Error|failed to load config|\bEPERM\b|\bEACCES\b|Cannot find (?:module|package)|Failed to resolve (?:import|entry)|ERR_MODULE_NOT_FOUND|ModuleNotFoundError|ImportError|SyntaxError|ERROR collecting|errors? during collection|Test suite failed to run|No test files found|No tests found|no tests ran|Tests\s+no tests|not recognized as an internal or external command|command not found|Loading PostCSS Plugin failed|\[build failed\]|could not compile/i;
+const REACHED_ASSERTION = /AssertionError|expect\(received\)|^\s*E\s+assert\b|--- FAIL:|^\s*(?:Expected|Received):/im;
+
+/**
+ * A non-zero exit is not proof by itself. Returns why a run never reached a test assertion,
+ * such as a startup, import, permission or timeout failure, or null when it may count.
+ */
+export function proofRunProblem(output: string): string | null {
+  const text = output.replace(ANSI, "");
+  const lines = text.split(/\r?\n/).map((line) => line.trim());
+  const unfinished = lines.find((line) => line.includes(TEST_DID_NOT_FINISH));
+  if (unfinished) return unfinished.slice(0, 160);
+  const problems = lines.filter((line) => DID_NOT_RUN.test(line));
+  if (problems.length === 0 || REACHED_ASSERTION.test(text)) return null;
+  // Prefer the error message over a source line or path that happens to match.
+  const reason = problems.find((line) => /^\w*Error\b/.test(line)) ?? (problems[0] as string);
+  return reason.slice(0, 160);
+}
+
 const normalise = (s: string) => s.replace(/\s+/g, " ").trim();
 
 /** Normalise `ADR-12`, `adr 012` and `ADR-0012` to one comparable form. */
@@ -98,12 +122,16 @@ function verifyProof(proof: Proof, finding: Finding, ctx: ProofContext): string 
         if (!record) return `failing_test ${proof.ref} was not recorded by "plumbline prove" on this commit`;
         if (record.sha256 !== hashFile(test)) return `failing_test ${proof.ref} changed after it was recorded`;
         if (record.exitCode === 0) return "failing_test must have failed on HEAD";
+        const problem = proofRunProblem(record.output);
+        if (problem) return `failing_test ${proof.ref} never reached a test assertion: ${problem}`;
         if (record.passedOnBase === false) return "failing_test also fails on base, so this change did not cause it";
         return null;
       }
       if (!proof.command) return "failing_test must record the command that ran it";
       if (proof.exitCode === undefined || proof.exitCode === 0) return "failing_test must have failed on HEAD";
       if (!proof.output?.trim()) return "failing_test must record its failure output";
+      const problem = proofRunProblem(proof.output);
+      if (problem) return `failing_test ${proof.ref} never reached a test assertion: ${problem}`;
       if (proof.passedOnBase === false) return "failing_test also fails on base, so this change did not cause it";
       return null;
     }

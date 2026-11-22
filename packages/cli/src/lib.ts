@@ -4,6 +4,7 @@ import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   CONTRACT_FILE,
+  TEST_DID_NOT_FINISH,
   buildGraph,
   checkContract,
   contractAt,
@@ -171,7 +172,8 @@ export function runProve(args: ProveArgs): RecordedProof {
     process.platform === "win32"
       ? spawnSync(args.command.map(quote).join(" "), { ...options, shell: true })
       : spawnSync(cmd, rest, options);
-  const output = `${result.stdout ?? ""}${result.stderr ?? ""}`;
+  const unfinished = result.error || result.signal ? `\n${TEST_DID_NOT_FINISH}: ${result.error?.message ?? result.signal}\n` : "";
+  const output = `${result.stdout ?? ""}${result.stderr ?? ""}${unfinished}`;
   const record: RecordedProof = {
     ref,
     sha256: hashFile(test),

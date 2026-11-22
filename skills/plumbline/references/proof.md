@@ -18,16 +18,20 @@ The CLI checks each proof against the repository. A finding whose proof does not
    plumbline prove .plumbline/proofs/invoice.tenant.test.js -- node --test .plumbline/proofs/invoice.tenant.test.js
    ```
 
-   This records the command, exit code, output, commit and a hash of the test. **Only a recorded run counts.** The test must fail on HEAD for the reason in the finding. Read the output: a syntax error or a missing import is not proof, so fix the test and run it again.
+   This records the command, exit code, output, commit and a hash of the test. **Only a recorded run counts.** The test must fail on HEAD for the reason in the finding. The CLI rejects a run that never reached an assertion, such as a startup, import, permission or timeout failure, so fix the test or runner and run it again.
 3. When it's practical, check that it passes on base, using a temporary worktree outside the repo:
 
    ```bash
    git worktree add <temp-dir> <merge-base>
    ```
 
-   Run the test there, remove the worktree, then re-run `plumbline prove` on HEAD with `--passed-on-base`. If it also fails on base, pass `--failed-on-base`: this change did not cause it, so it is not this PR's finding.
+   If `.git` is read-only, as it is in some agent sandboxes, export base instead with `git archive --format=tar -o <run>/base.tar <merge-base>`, extract it to `<run>/base-tree`, and copy `.plumbline/proofs` there.
+
+   Run the test there, remove the worktree or export, then re-run `plumbline prove` on HEAD with `--passed-on-base`. If it also fails on base, pass `--failed-on-base`: this change did not cause it, so it is not this PR's finding.
    If the code under test doesn't exist on base, because this change adds it, skip this step and pass neither flag.
 4. Never commit proof tests outside review-and-fix mode. `.plumbline/proofs/` is ignored locally.
+
+In a sandbox or a checkout without `node_modules`, Vitest may need `--configLoader runner` so it doesn't write a temporary config outside the workspace. If the repo's PostCSS setup can't load, set `css: { postcss: { plugins: [] } }` and `test.css: false` in a proof-only config.
 
 If the tests can't run here (no dependencies, needs a service), say so and leave the finding without this proof. Do not guess the result.
 
