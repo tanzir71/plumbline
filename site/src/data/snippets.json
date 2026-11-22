@@ -2,7 +2,34 @@
   "_rule": "The one source for install snippets. The site and docs both read this file, and a test keeps the contract valid against the real schema.",
   "skillInstall": "npx skills add tanzir71/plumbline -g",
   "skill": "$ npx skills add tanzir71/plumbline -g\n$ claude\n> /plumbline review\n\n  scope    14 files  ·  base main\n  review   4 reviewers  ·  6 lenses\n  prove    3 kept  ·  4 dropped\n  report   merge score 3/5",
-  "cli": "# Install once, then use it in any repo\nnpm install -g @tanziro/plumbline\n\n# Review the current branch or a GitHub PR\nplumbline review\nplumbline review 482\n\n# Benchmark reviewers on your own PRs\nplumbline benchmark init",
+  "quickstart": [
+    {
+      "title": "Check your tools",
+      "body": "Open PowerShell on Windows or Terminal on Mac. Each command should print a version. You need Node.js 20.12 or later.",
+      "links": [["Get Node.js", "https://nodejs.org/"], ["Get Git", "https://git-scm.com/downloads"]],
+      "commands": ["node --version", "git --version"]
+    },
+    {
+      "title": "Install Plumbline",
+      "body": "This adds the plumbline command to your computer.",
+      "commands": ["npm install -g @tanziro/plumbline"]
+    },
+    {
+      "title": "Connect an AI agent",
+      "body": "Plumbline uses your own account. The second command opens a sign-in. Prefer Claude Code? The guide has both.",
+      "commands": ["npm install -g @openai/codex", "codex login"]
+    },
+    {
+      "title": "Open your project",
+      "body": "Replace the path with your project folder, then switch to the branch you want reviewed.",
+      "commands": ["cd path/to/your-project", "git switch your-branch"]
+    },
+    {
+      "title": "Run your first review",
+      "body": "It can take several minutes. You get a merge score and a list of issues. Your code stays unchanged.",
+      "commands": ["plumbline review"]
+    }
+  ],
   "githubAction":"# .github/workflows/plumbline.yml\n- uses: tanzir71/plumbline@v1\n  with:\n    model: claude-sonnet-5-5\n    key: ${{ secrets.ANTHROPIC_KEY }}",
   "gitlab": "# .gitlab-ci.yml\ninclude:\n  - remote: 'https://raw.githubusercontent.com/tanzir71/plumbline/v1/ci/gitlab/plumbline.yml'\n# CI/CD variables: PLUMBLINE_MODEL_KEY, PLUMBLINE_GITLAB_TOKEN",
   "mcp": "{ \"mcpServers\": { \"plumbline\": { \"command\": \"npx\", \"args\": [\"-y\", \"@tanziro/plumbline\", \"mcp\"] } } }",

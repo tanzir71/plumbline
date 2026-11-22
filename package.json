@@ -1,6 +1,6 @@
 {
   "name": "plumbline-monorepo",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "private": true,
   "description": "Open-source code reviewer that checks the structure, not just the diff.",
   "license": "MIT",

@@ -13,6 +13,16 @@ Docs: https://tanzir71.github.io/plumbline/docs/
 
 ## Install
 
+**New here?** Follow the [step-by-step beginner guide](https://tanzir71.github.io/plumbline/docs/getting-started/). You need Node.js 20.12 or later, Git, and a Codex or Claude account.
+
+```bash
+npm install -g @tanziro/plumbline
+npm install -g @openai/codex
+codex login
+cd path/to/your-project
+plumbline review
+```
+
 **Agent Skill**
 
 ```bash

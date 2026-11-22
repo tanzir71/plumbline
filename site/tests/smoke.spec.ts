@@ -363,19 +363,45 @@ test.describe("interactions", () => {
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe("npx skills add tanzir71/plumbline -g");
   });
 
+  test("field test shows aggregate Plumbline counts with its limits", async ({ page }) => {
+    await page.goto(HOME);
+    const section = page.locator("#benchmark");
+    const text = (await section.innerText()).replace(/\s+/g, " ");
+    expect(text).toContain("12 merged PRs");
+    expect(text).toContain("This is not an accuracy measurement.");
+    expect(text).not.toMatch(/competitor|precision|catch rate/i);
+    const vendors = (await page.locator("#cost tbody th").allInnerTexts()).map((name) => name.split("\n")[0]?.trim() ?? "").filter((name) => name && !/plumbline/i.test(name));
+    expect(vendors.length).toBeGreaterThan(0);
+    for (const vendor of vendors) expect(text.toLowerCase()).not.toContain(vendor.toLowerCase());
+    await expect(section.locator(".ledger tbody tr")).toHaveCount(4);
+  });
+
+  test("install starts with copyable beginner steps", async ({ page, context }) => {
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    await page.goto(HOME);
+    await expect(page.getByRole("tab", { name: "Start here" })).toHaveAttribute("aria-selected", "true");
+    const panel = page.getByRole("tabpanel");
+    await expect(panel.locator(".quick > li")).toHaveCount(5);
+    await expect(panel).toContainText("npm install -g @tanziro/plumbline");
+    await expect(panel).toContainText("plumbline review");
+    await panel.getByRole("button", { name: "Copy npm install -g @tanziro/plumbline" }).click();
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe("npm install -g @tanziro/plumbline");
+    await expect(page.locator("#install a[href$='docs/getting-started/']").first()).toBeVisible();
+  });
+
   test("install tabs work by keyboard", async ({ page }) => {
     await page.goto(HOME);
-    await page.getByRole("tab", { name: "Skill" }).focus();
+    await page.getByRole("tab", { name: "Start here" }).focus();
     await page.keyboard.press("ArrowRight");
-    await expect(page.getByRole("tab", { name: "CLI" })).toBeFocused();
-    await expect(page.getByRole("tabpanel")).toContainText("plumbline review");
+    await expect(page.getByRole("tab", { name: "Skill" })).toBeFocused();
+    await expect(page.getByRole("tabpanel")).toContainText("/plumbline review");
     await page.keyboard.press("ArrowRight");
     await expect(page.getByRole("tab", { name: "GitHub Action" })).toBeFocused();
     await expect(page.getByRole("tabpanel")).toContainText("tanzir71/plumbline@v1");
     await page.keyboard.press("End");
     await expect(page.getByRole("tabpanel")).toContainText("@tanziro/plumbline");
     await page.keyboard.press("ArrowRight");
-    await expect(page.getByRole("tab", { name: "Skill" })).toHaveAttribute("aria-selected", "true");
+    await expect(page.getByRole("tab", { name: "Start here" })).toHaveAttribute("aria-selected", "true");
     await page.keyboard.press("ArrowLeft");
     await expect(page.getByRole("tab", { name: "MCP server" })).toHaveAttribute("aria-selected", "true");
   });

@@ -31,7 +31,7 @@ Plumbline never approves or merges, and the agent doesn't get your source-contro
 | Command | What it does |
 |---|---|
 | `plumbline review [target]` | Runs the full review with your signed-in agent |
-| `plumbline benchmark <action>` | Compares reviewers on your labelled PRs: `init`, `run`, `score`, `compare`. See [Benchmark](../benchmark/) |
+| `plumbline benchmark <action>` | Compares reviewers on your labelled PRs: `init`, `run`, `score`, `compare`. See [Benchmark](./benchmark.md) |
 | `plumbline init` | Writes a `plumbline.yml` skeleton, guessing modules from your folders |
 | `plumbline scope [target]` | Pins the diff range and collects rule files. Target: branch, commit or PR |
 | `plumbline graph --base <ref>` | Diffs the JS/TS import graph between base and HEAD |

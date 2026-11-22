@@ -2,7 +2,31 @@
 import arrow from "../assets/figma/arrow-14.svg?url";
 import CopyButton from "./CopyButton.astro";
 import SectionHead from "./SectionHead.astro";
+import fieldTest from "../data/field-test.json";
 import { url } from "../lib/url";
+
+const results = [
+  { label: "Merged PRs reviewed", note: "real product work", value: fieldTest.prs, detail: "Each review was pinned to one commit.", accent: false },
+  { label: "P1 findings", note: "fix before merge", value: fieldTest.p1, detail: "Each one kept its proof through the CLI's gate.", accent: false },
+  { label: "Recorded failing tests", note: "proof", value: fieldTest.failingTests, detail: "The test ran on the reviewed commit and failed at its assertion.", accent: true },
+  { label: "New import cycles", note: "proof", value: fieldTest.importCycles, detail: "The graph diff shows the PR added the cycle.", accent: false },
+];
+
+const method = [
+  ["Select", "Merged PRs from one team that already had a completed automated review."],
+  ["Pin", "Each review is fixed to one commit and its merge base."],
+  ["Check", "The import graph and contract rules run before any model."],
+  ["Review", "Four reviewer passes read the change across the lenses."],
+  ["Prove", "The CLI keeps a P1 only with a recorded failing test or graph diff."],
+];
+
+const strip = [
+  ["Repos", String(fieldTest.repos), "private, one team"],
+  ["Languages", "TS · Python", "graph checks cover TS"],
+  ["Reviewer passes", String(fieldTest.reviewerPasses), "four per PR"],
+  ["Agent", "Codex", "GPT-6"],
+  ["Raw data", "Private", "aggregate counts only"],
+];
 
 const rows = [
   {
@@ -29,14 +53,55 @@ const rows = [
       id="benchmark-title"
       num="09"
       label="Benchmark"
-      lines={["Test it on", "your own PRs."]}
-      lead="Compare Plumbline with the reviewer you already run, then tune it for your codebase. Results stay on your machine, and we publish no scores."
+      lines={["Tested on real PRs.", "Run it on yours."]}
+      lead={`We ran Plumbline on ${fieldTest.prs} merged PRs from one team's private repos and kept only the serious findings it could prove. Run the same checks on your own PRs.`}
     >
       <a class="guide" href={url("docs/benchmark/")}>Read the benchmark guide <img src={arrow} alt="" width="14" height="14" /></a>
     </SectionHead>
 
     <div class="body">
-      <table>
+      <div class="field">
+        <p class="run-bar"><span class="tag">FIELD TEST</span><span>{fieldTest.prs} merged PRs · {fieldTest.repos} private repos</span></p>
+        <table class="ledger">
+          <caption class="sr-only">Plumbline field test counts</caption>
+          <thead>
+            <tr><th scope="col">Measure</th><th scope="col">Count</th><th scope="col">What it means</th></tr>
+          </thead>
+          <tbody>
+            {results.map((row) => (
+              <tr>
+                <th scope="row"><span class:list={["name", { on: row.accent }]}>{row.label}</span><span class="sub">{row.note}</span></th>
+                <td class="value">{row.value}</td>
+                <td class="how">{row.detail}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <p class="limit">Findings were judged by the same workflow that produced them. Six reviews used a commit before the final merge, and full test suites were not run. This is not an accuracy measurement.</p>
+      </div>
+
+      <aside class="method" aria-labelledby="method-title">
+        <h3 id="method-title">METHOD</h3>
+        <ol>
+          {method.map(([title, body], i) => (
+            <li>
+              <span class="rail" aria-hidden="true"><i></i><b></b></span>
+              <div><p class="step"><span>{`0${i + 1}`}</span>{title}</p><p class="copy">{body}</p></div>
+            </li>
+          ))}
+        </ol>
+      </aside>
+    </div>
+
+    <dl class="strip">
+      {strip.map(([key, value, note]) => (
+        <div><dt>{key}</dt><dd>{value}</dd><dd class="note-cell">{note}</dd></div>
+      ))}
+    </dl>
+
+    <div class="own">
+      <h3>RUN IT ON YOUR PRS</h3>
+      <table class="commands">
         <caption class="sr-only">Ways to compare and tune reviewers</caption>
         <thead>
           <tr><th scope="col">Goal</th><th scope="col">Run</th><th scope="col">What you get</th></tr>
@@ -73,8 +138,35 @@ const rows = [
   }
   .body {
     display: flex;
+    align-items: flex-start;
+    gap: 56px;
+  }
+  .field {
+    display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 14px;
+    flex: 1 1 0;
+    min-width: 0;
+  }
+  .run-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 16px;
+  }
+  .tag {
+    flex: none;
+    padding: 3px 8px;
+    border-radius: var(--r-xs);
+    background: var(--bg-raised);
+    color: var(--text-primary);
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 14px;
+    letter-spacing: 0.66px;
   }
   table {
     width: 100%;
@@ -92,8 +184,10 @@ const rows = [
     letter-spacing: 0.88px;
     text-transform: uppercase;
   }
-  thead th:nth-child(1) { width: 216px; }
-  thead th:nth-child(2) { width: 392px; }
+  .ledger thead th:nth-child(1) { width: 236px; }
+  .ledger thead th:nth-child(2) { width: 88px; }
+  .commands thead th:nth-child(1) { width: 216px; }
+  .commands thead th:nth-child(2) { width: 392px; }
   tbody tr {
     border-top: 1px solid var(--rule);
   }
@@ -102,7 +196,7 @@ const rows = [
   }
   tbody th,
   tbody td {
-    padding: 9px 16px 9px 0;
+    padding: 12px 16px 12px 0;
     text-align: left;
     vertical-align: middle;
   }
@@ -111,6 +205,164 @@ const rows = [
     font-size: 14px;
     font-weight: 500;
     line-height: 18px;
+  }
+  .commands tbody th,
+  .commands tbody td {
+    padding-top: 9px;
+    padding-bottom: 9px;
+  }
+  .name,
+  .sub {
+    display: block;
+  }
+  .name.on {
+    color: var(--accent-plumb);
+  }
+  .sub {
+    margin-top: 2px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 14px;
+  }
+  .value {
+    color: var(--text-primary);
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 24px;
+    letter-spacing: -0.18px;
+    font-variant-numeric: tabular-nums;
+  }
+  tbody td.how {
+    padding-right: 0;
+    color: var(--text-secondary);
+    font-size: 13px;
+    line-height: 20px;
+  }
+  .limit {
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 18px;
+  }
+  .method {
+    flex: none;
+    width: 340px;
+  }
+  h3 {
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 14px;
+    letter-spacing: 0.88px;
+  }
+  .method ol {
+    margin-top: 16px;
+  }
+  .method li {
+    display: flex;
+    gap: 14px;
+  }
+  .method li > div {
+    flex: 1 1 0;
+    min-width: 0;
+    padding-bottom: 20px;
+  }
+  .method li:last-child > div {
+    padding-bottom: 0;
+  }
+  .rail {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: none;
+    width: 9px;
+    padding-top: 4px;
+  }
+  .rail i {
+    flex: none;
+    width: 9px;
+    height: 9px;
+    border-radius: 2px;
+    background: var(--text-muted);
+  }
+  .rail b {
+    flex: 1 1 0;
+    width: 1px;
+    margin-top: 4px;
+    background: var(--line-edge);
+  }
+  .method li:last-child .rail i {
+    background: var(--accent-plumb);
+  }
+  .method li:last-child .rail b {
+    display: none;
+  }
+  .step {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 18px;
+  }
+  .step span {
+    color: var(--accent-plumb);
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+  .copy {
+    margin-top: 4px;
+    color: var(--text-secondary);
+    font-size: 13px;
+    line-height: 20px;
+  }
+  .strip {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    padding-top: 16px;
+    border-top: 1px solid var(--rule);
+  }
+  .strip > div {
+    min-width: 0;
+    padding: 0 20px;
+    border-left: 1px solid var(--rule);
+  }
+  .strip > div:first-child {
+    padding-left: 0;
+    border-left: 0;
+  }
+  dt {
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 14px;
+    letter-spacing: 0.88px;
+    text-transform: uppercase;
+  }
+  .strip dd {
+    margin-top: 4px;
+    color: var(--text-primary);
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 24px;
+    letter-spacing: -0.18px;
+  }
+  .strip dd.note-cell {
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 18px;
+    letter-spacing: 0;
+  }
+  .own {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
   }
   .run {
     display: flex;
@@ -126,12 +378,6 @@ const rows = [
     font-variant-ligatures: none;
     overflow-wrap: anywhere;
   }
-  tbody td.how {
-    padding-right: 0;
-    color: var(--text-secondary);
-    font-size: 13px;
-    line-height: 20px;
-  }
   .note {
     color: var(--text-muted);
     font-size: 13px;
@@ -140,11 +386,37 @@ const rows = [
   .note code {
     color: var(--text-secondary);
     font-size: 12px;
+    font-variant-ligatures: none;
   }
 
+  @media (max-width: 1279px) {
+    .body {
+      flex-direction: column;
+      gap: 40px;
+    }
+    .field {
+      flex: none;
+      width: 100%;
+    }
+    .method {
+      width: 100%;
+      max-width: 520px;
+    }
+  }
   @media (max-width: 1023px) {
-    thead th:nth-child(1) { width: 168px; }
-    thead th:nth-child(2) { width: 300px; }
+    .commands thead th:nth-child(1) { width: 168px; }
+    .commands thead th:nth-child(2) { width: 300px; }
+    .ledger thead th:nth-child(1) { width: 196px; }
+    .ledger thead th:nth-child(2) { width: 72px; }
+    .strip {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 20px 0;
+    }
+    .strip > div,
+    .strip > div:first-child {
+      padding: 0 16px 0 0;
+      border-left: 0;
+    }
   }
   @media (max-width: 767px) {
     thead {
@@ -159,13 +431,35 @@ const rows = [
     tr,
     tbody th,
     tbody td,
-    tbody td.how {
+    tbody td.how,
+    .commands tbody th,
+    .commands tbody td {
       display: block;
       width: 100%;
       padding: 0;
     }
     tbody tr {
       padding: 12px 0;
+    }
+    .ledger tbody tr {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      column-gap: 16px;
+      align-items: start;
+    }
+    .ledger tbody th {
+      width: auto;
+    }
+    .ledger tbody td.value {
+      grid-column: 2;
+      grid-row: 1;
+      width: auto;
+      text-align: right;
+    }
+    .ledger tbody td.how {
+      grid-column: 1 / -1;
+      width: auto;
+      margin-top: 6px;
     }
     .run {
       justify-content: space-between;

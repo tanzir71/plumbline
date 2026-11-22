@@ -6,6 +6,8 @@ order: 1
 
 Plumbline is an open-source code reviewer that runs with your own model keys. It looks for regressions in the diff, then checks the change against the architecture your team agreed on. A P0 or P1 finding needs proof, or it is downgraded.
 
+**New here?** Follow the [step-by-step guide](./getting-started.md).
+
 ## Pick a surface
 
 | Surface | Runs in | Who pays for the model |

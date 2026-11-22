@@ -1,7 +1,9 @@
 ---
+import arrow from "../assets/figma/arrow-14.svg?url";
 import CopyButton from "./CopyButton.astro";
 import SectionHead from "./SectionHead.astro";
 import snippets from "../data/snippets.json";
+import { url } from "../lib/url";
 
 const esc = (s: string) => s.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 
@@ -35,18 +37,6 @@ const tabs = [
       ["Runs in your agent", "Claude Code, Codex, OpenCode, or anything that loads Agent Skills."],
       ["Uses your plan or key", "Model calls go straight from your machine to your provider."],
       ["Read-only by default", "Writes nothing to your repo unless you choose review-and-fix."],
-    ],
-  },
-  {
-    id: "cli",
-    label: "CLI",
-    file: "terminal",
-    html: colourPlain(snippets.cli),
-    copy: snippets.cli,
-    facts: [
-      ["One command", "Runs the checks, starts your signed-in Codex or Claude Code, and scores the result."],
-      ["Uses your plan or key", "Your agent calls your model provider directly. Plumbline has no backend."],
-      ["Run it in a normal terminal", "An agent's sandbox blocks a second agent from reaching its model."],
     ],
   },
   {
@@ -95,25 +85,51 @@ const tabs = [
       num="08"
       label="Install"
       lines={["Five ways in.", "Same engine."]}
-      lead="Start local, then put it in CI once you trust it. Every surface runs the same lenses and the same proof rules."
-    />
+      lead="New to this? Follow Start here, one step at a time. When you're ready, put the same review in your agent or CI."
+    >
+      <a class="guide" href={url("docs/getting-started/")}>Read the beginner guide <img src={arrow} alt="" width="14" height="14" /></a>
+    </SectionHead>
 
     <div class="panel" data-tabs>
       <div class="tabs" role="tablist" aria-label="Install options">
-        {tabs.map((t, i) => (
+        <button type="button" role="tab" id="tab-start" aria-controls="panel-start" aria-selected="true" tabindex="0">Start here</button>
+        {tabs.map((t) => (
           <button
             type="button"
             role="tab"
             id={`tab-${t.id}`}
             aria-controls={`panel-${t.id}`}
-            aria-selected={i === 0 ? "true" : "false"}
-            tabindex={i === 0 ? 0 : -1}
+            aria-selected="false"
+            tabindex="-1"
           >{t.label}</button>
         ))}
       </div>
 
-      {tabs.map((t, i) => (
-        <div class="tabpanel" role="tabpanel" id={`panel-${t.id}`} aria-labelledby={`tab-${t.id}`} hidden={i !== 0}>
+      <div class="tabpanel start" role="tabpanel" id="panel-start" aria-labelledby="tab-start">
+        <ol class="quick">
+          {snippets.quickstart.map((step, n) => (
+            <li>
+              <span class="n">{`0${n + 1}`}</span>
+              <div class="step-copy">
+                <h3>{step.title}</h3>
+                <p>{step.body}</p>
+                {step.links && (
+                  <p class="step-links">{step.links.map(([label, href]) => <a href={href}>{label}</a>)}</p>
+                )}
+              </div>
+              <div class="commands">
+                {step.commands.map((command) => (
+                  <div class="command"><code>{command}</code><CopyButton text={command} label={`Copy ${command}`} tone="plain" /></div>
+                ))}
+              </div>
+            </li>
+          ))}
+        </ol>
+        <p class="stuck">Got an error? <a href={url("docs/getting-started/#if-something-goes-wrong")}>See what it means and how to fix it</a></p>
+      </div>
+
+      {tabs.map((t) => (
+        <div class="tabpanel" role="tabpanel" id={`panel-${t.id}`} aria-labelledby={`tab-${t.id}`} hidden>
           <div class="code">
             <div class="code-head"><span>{t.file}</span><CopyButton text={t.copy} label={`Copy ${t.label} snippet`} tone="plain" /></div>
             <pre tabindex="0" aria-label={`${t.label} snippet`}><code set:html={t.html} /></pre>
@@ -192,6 +208,83 @@ const tabs = [
   }
   .tabpanel[hidden] {
     display: none;
+  }
+  .guide {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 18px;
+  }
+  .tabpanel.start {
+    display: block;
+    padding: 8px 24px 24px;
+  }
+  .tabpanel.start[hidden] {
+    display: none;
+  }
+  .quick > li {
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr) minmax(0, 460px);
+    gap: 16px;
+    align-items: start;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .step-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+  .step-copy p {
+    max-width: 520px;
+    color: var(--text-secondary);
+    font-size: 14px;
+    line-height: 21px;
+  }
+  .step-copy .step-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 16px;
+    margin-top: 2px;
+  }
+  .step-links a,
+  .stuck a {
+    color: var(--accent-plumb);
+    font-weight: 500;
+  }
+  .commands {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+  }
+  .command {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-height: 40px;
+    padding: 4px 4px 4px 12px;
+    border-radius: var(--r-sm);
+    background: var(--bg-canvas);
+  }
+  .command code {
+    min-width: 0;
+    color: var(--text-primary);
+    font-size: 13px;
+    line-height: 18px;
+    font-variant-ligatures: none;
+    overflow-wrap: anywhere;
+  }
+  .stuck {
+    padding-top: 16px;
+    color: var(--text-secondary);
+    font-size: 14px;
+    line-height: 21px;
   }
   .code {
     display: flex;
@@ -279,6 +372,12 @@ const tabs = [
     }
   }
   @media (max-width: 1023px) {
+    .quick > li {
+      grid-template-columns: 28px minmax(0, 1fr);
+    }
+    .commands {
+      grid-column: 2;
+    }
     .tabpanel {
       flex-direction: column;
       align-items: stretch;
@@ -298,6 +397,19 @@ const tabs = [
     }
     .tabpanel {
       padding: 16px;
+    }
+    .tabpanel.start {
+      padding: 0 16px 16px;
+    }
+    .quick > li {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 10px;
+    }
+    .commands {
+      grid-column: 1;
+    }
+    .command code {
+      font-size: 12px;
     }
     .code {
       padding: 16px;

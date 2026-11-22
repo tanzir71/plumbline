@@ -4,7 +4,7 @@ description: Pre-merge code review that checks the structure, not just the diff.
 license: MIT
 compatibility: Needs git and Node 20+. Optional - a sub-agent tool for parallel reviewers, gh for PR mode. Graph checks cover JS/TS; the model lenses work in any language.
 metadata:
-  version: "1.1.0"
+  version: "1.1.1"
   source: https://github.com/tanzir71/plumbline
 ---
 

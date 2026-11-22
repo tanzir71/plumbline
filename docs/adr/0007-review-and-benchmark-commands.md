@@ -15,4 +15,4 @@ Running a review by hand meant pointing an agent at the skill, and nested agents
 
 ## Consequences
 
-The CLI package now ships the skill. The landing page adds a CLI install tab and a Benchmark section, which replace the matching copy in `docs/landing-page.md`. Benchmark counts describe only one suite's cases and labels, so they must not be presented as a general accuracy figure.
+The CLI package now ships the skill. The landing page adds a beginner Start here install tab and a Benchmark section, which replace the matching copy in `docs/landing-page.md`. Benchmark counts describe only one suite's cases and labels, so they must not be presented as a general accuracy figure.

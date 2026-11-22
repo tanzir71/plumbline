@@ -414,6 +414,9 @@ svg text.signal-hit {
         #install .panel,
         #benchmark tbody tr,
         #benchmark .note,
+        #benchmark .limit,
+        #benchmark .method li,
+        #benchmark .strip > div,
         .section .cols > *,
         #audit .cols > *
       ) {

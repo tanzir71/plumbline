@@ -50,7 +50,7 @@ The site never claims a competitor's weakness. Competitors appear only in the Co
 
 **Not in scope:**
 - a hosted SaaS, accounts, billing, or any server that receives user code
-- benchmarks, accuracy figures or performance claims anywhere on the site or in the README
+- benchmarks, accuracy figures or performance claims anywhere on the site or in the README, except the labelled aggregate field test in ADR 0008
 
 Revenue later comes from architecture audits and rollouts (the final-CTA "teams" offer).
 

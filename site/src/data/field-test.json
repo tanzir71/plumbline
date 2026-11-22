@@ -1,0 +1,10 @@
+{
+  "_rule": "Aggregate counts only. Never add repository names, PR titles, code, raw reviews or competitor results. Recompute from the saved CLI reports before changing a number. See ADR 0008.",
+  "checkedAt": "2026-11-23",
+  "prs": 12,
+  "repos": 2,
+  "reviewerPasses": 48,
+  "p1": 17,
+  "failingTests": 10,
+  "importCycles": 7
+}

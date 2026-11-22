@@ -10,7 +10,7 @@ Reviews run with your own agent and model account. Suites and results stay on yo
 
 ## Compare one PR
 
-If another reviewer already runs on your PRs, install the [Agent Skill](../skill/) and ask your agent:
+If another reviewer already runs on your PRs, install the [Agent Skill](./skill.md) and ask your agent:
 
 ```text
 /plumbline compare
