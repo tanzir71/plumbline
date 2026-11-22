@@ -4,9 +4,9 @@ description: Compare reviewers on your own labelled PRs and tune Plumbline for y
 order: 15
 ---
 
-`plumbline benchmark` measures reviewers against issues you labelled in your own repository. Use it to compare Plumbline with another reviewer, or to see what a lens or contract edit changed.
+`plumbline benchmark` measures reviewers against issues you labelled in your own repository. Use it to compare Plumbline with another reviewer, and to fine-tune Plumbline for your codebase so its reviews improve over time.
 
-Reviews run with your own agent and model account. Suites and results stay on your machine. Plumbline publishes no benchmark or accuracy figures, and a result only describes the cases and labels in your suite.
+Reviews run with your own agent and model account. Plumbline doesn't upload your suites or results. It publishes no accuracy figures, and a result only describes the cases and labels in your suite.
 
 ## Compare one PR
 
@@ -78,11 +78,18 @@ Include clean changes as well as buggy ones, so noisy reviewers show up in the c
 
 A case that could not run is listed as blocked and isn't counted.
 
-## Tuning
+## Improve Plumbline over time
+
+Plumbline reviews with plain markdown [lenses](./lenses.md) and the rules in your `plumbline.yml`. The benchmark shows what they miss on your code and whether an edit helped, so each round can make Plumbline fit your codebase better.
 
 1. Run the suite to get a baseline.
-2. Edit a lens in `.plumbline/lenses/` or your `plumbline.yml`.
-3. Run the suite again. It uses your current lenses and contract on each case's commit.
-4. Run `plumbline benchmark compare` to see what was newly caught or missed.
+2. Read the missed issues and unlabelled comments to find what to change.
+3. Edit a lens in `.plumbline/lenses/` or a rule in `plumbline.yml`. A lens with the same id as a built-in replaces it.
+4. Run the suite again. It uses your current lenses and contract on each case's commit.
+5. Run `plumbline benchmark compare` to see what was newly caught or newly missed. Keep the edit if it helped, and undo it if it didn't.
+
+When a review misses a real bug or raises a false alarm, add that PR to your suite. Each new case tests your next edit against a problem your team actually hit. Commit your lenses, contract and suite so everyone on the team reviews with the same tuning.
+
+Plumbline doesn't change its lenses by itself or send your results anywhere. You decide which edits to keep.
 
 After editing labels or adding another reviewer's output, run `plumbline benchmark score`. It rescores the saved run and uses no model tokens.
