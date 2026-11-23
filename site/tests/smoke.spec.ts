@@ -360,7 +360,7 @@ test.describe("interactions", () => {
     await page.getByRole("button", { name: "Copy install command" }).focus();
     await page.keyboard.press("Enter");
     await expect(page.locator("#copy-status")).toHaveText("Copied");
-    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe("npx skills add tanzir71/plumbline -g");
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe("npm install -g @tanziro/plumbline");
   });
 
   test("field test shows aggregate Plumbline counts with its limits", async ({ page }) => {

@@ -1,5 +1,6 @@
 {
   "_rule": "The one source for install snippets. The site and docs both read this file, and a test keeps the contract valid against the real schema.",
+  "cliInstall": "npm install -g @tanziro/plumbline",
   "skillInstall": "npx skills add tanzir71/plumbline -g",
   "skill": "$ npx skills add tanzir71/plumbline -g\n$ claude\n> /plumbline review\n\n  scope    14 files  ·  base main\n  review   4 reviewers  ·  6 lenses\n  prove    3 kept  ·  4 dropped\n  report   merge score 3/5",
   "quickstart": [

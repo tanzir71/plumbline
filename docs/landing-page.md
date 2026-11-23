@@ -190,7 +190,7 @@ Padding 64 / 120 / 88, left-aligned, gap 48. The background has the edge glows a
     - H1 `Review the structure,` / `not just the diff.` (line 2 secondary).
     - Lead (max 580): `Plumbline is an open-source code reviewer that runs inside Claude Code, Codex and OpenCode. It hunts regressions like the hosted bots, then checks every PR against the architecture your team agreed on, and proves every serious finding.`
     - CTA row (gap 10):
-      - Install command: flat bg raised, radius 8, padding 5/5/5/16. Shows `$` (muted) + `npx skills add tanzir71/plumbline -g` (mono 13) + a 32px accent copy button.
+      - Install command: flat bg raised, radius 8, padding 5/5/5/16. Shows `$` (muted) + `npm install -g @tanziro/plumbline` (mono 13) + a 32px accent copy button.
       - Secondary "Star on GitHub" and Secondary "Docs".
   - **At a glance** (rest of the row). **No box**: no fill, stroke or radius.
     - Head row: `AT A GLANCE` (mono 11/500 +8% muted) on the left, `v1.0` (mono 11 muted) on the right, with a 1px line-edge rule (60%) underneath.
