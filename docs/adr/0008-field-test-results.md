@@ -9,7 +9,7 @@ The owner ran Plumbline on 12 of their merged PRs and wants the landing page to 
 ## Decision
 
 - The Benchmark section reuses that frame's layout for a labelled field test.
-- It shows aggregate Plumbline counts only: PRs reviewed, P1 findings and the proof behind them.
+- It shows aggregate Plumbline counts only: PRs reviewed, candidates, findings, how Plumbline's own findings were judged, the proof behind them and the problems the test exposed.
 - It shows no repository names, PR titles, code, raw reviews, precision, catch rate, cost per bug or competitor results.
 - The comparison stays private because the workflow that produced the findings also judged them.
 

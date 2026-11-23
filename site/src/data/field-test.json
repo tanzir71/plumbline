@@ -4,7 +4,16 @@
   "prs": 12,
   "repos": 2,
   "reviewerPasses": 48,
+  "candidates": 64,
+  "candidatesRejected": 5,
+  "findings": 43,
   "p1": 17,
-  "failingTests": 10,
-  "importCycles": 7
+  "p2": 26,
+  "rootCauses": 40,
+  "judgedReal": 36,
+  "judgedUnclear": 4,
+  "p1WithFailingTest": 10,
+  "proofTestFiles": 7,
+  "importCycles": 7,
+  "largestUnreadPaths": 1120
 }

@@ -6,10 +6,17 @@ import fieldTest from "../data/field-test.json";
 import { url } from "../lib/url";
 
 const results = [
-  { label: "Merged PRs reviewed", note: "real product work", value: fieldTest.prs, detail: "Each review was pinned to one commit.", accent: false },
-  { label: "P1 findings", note: "fix before merge", value: fieldTest.p1, detail: "Each one kept its proof through the CLI's gate.", accent: false },
-  { label: "Recorded failing tests", note: "proof", value: fieldTest.failingTests, detail: "The test ran on the reviewed commit and failed at its assertion.", accent: true },
-  { label: "New import cycles", note: "proof", value: fieldTest.importCycles, detail: "The graph diff shows the PR added the cycle.", accent: false },
+  { label: "Candidates proposed", note: "before triage", value: fieldTest.candidates, detail: `Four reviewer passes proposed them. Triage rejected ${fieldTest.candidatesRejected} and merged duplicates.`, accent: false },
+  { label: "Findings reported", note: `${fieldTest.p1} P1 · ${fieldTest.p2} P2`, value: fieldTest.findings, detail: `${fieldTest.findings - fieldTest.importCycles} came from reviewers and ${fieldTest.importCycles} from the import graph.`, accent: false },
+  { label: "Judged real", note: `of ${fieldTest.rootCauses} root causes`, value: fieldTest.judgedReal, detail: "Related findings were grouped, then checked against the reviewed commit.", accent: true },
+  { label: "Impact unclear", note: `of ${fieldTest.rootCauses} root causes`, value: fieldTest.judgedUnclear, detail: `These cover all ${fieldTest.importCycles} new import cycles. The cycles exist, but their merge impact wasn't established.`, accent: false },
+  { label: "P1s with a failing test", note: "proof", value: fieldTest.p1WithFailingTest, detail: `${fieldTest.proofTestFiles} test files ran on the reviewed commit and failed at an assertion.`, accent: false },
+];
+
+const issues = [
+  { name: "Cycle scoring", happened: "One PR scored 0/5, mostly from automatic P1 cycles. Four of those paths shared one dependency cluster.", status: "Open", open: true },
+  { name: "Graph scope", happened: "An earlier run changed scope and reported existing cycles as new.", status: "Fixed in 1.1.0", open: false },
+  { name: "Proof status", happened: "A test runner crash was recorded as a failing test. That run stayed unscored.", status: "Fixed in 1.1.1", open: false },
 ];
 
 const method = [
@@ -18,6 +25,7 @@ const method = [
   ["Check", "The import graph and contract rules run before any model."],
   ["Review", "Four reviewer passes read the change across the lenses."],
   ["Prove", "The CLI keeps a P1 only with a recorded failing test or graph diff."],
+  ["Judge", "Findings are grouped by root cause and checked against the code."],
 ];
 
 const strip = [
@@ -54,7 +62,7 @@ const rows = [
       num="09"
       label="Benchmark"
       lines={["Tested on real PRs.", "Run it on yours."]}
-      lead={`We ran Plumbline on ${fieldTest.prs} merged PRs from one team's private repos and kept only the serious findings it could prove. Run the same checks on your own PRs.`}
+      lead={`We ran Plumbline on ${fieldTest.prs} merged PRs from one team's private repos, then checked what it reported against the code. Run the same checks on your own PRs.`}
     >
       <a class="guide" href={url("docs/benchmark/")}>Read the benchmark guide <img src={arrow} alt="" width="14" height="14" /></a>
     </SectionHead>
@@ -77,7 +85,7 @@ const rows = [
             ))}
           </tbody>
         </table>
-        <p class="limit">Findings were judged by the same workflow that produced them. Six reviews used a commit before the final merge, and full test suites were not run. This is not an accuracy measurement.</p>
+        <p class="limit">The workflow that produced these findings also judged them, so they don't show how many bugs were missed or how often raw model output is wrong. The PRs overlap, six reviews used a commit before the final merge, one large review left {fieldTest.largestUnreadPaths.toLocaleString("en-US")} paths partly read or unread, and full test suites were not run. This is not an accuracy measurement.</p>
       </div>
 
       <aside class="method" aria-labelledby="method-title">
@@ -98,6 +106,25 @@ const rows = [
         <div><dt>{key}</dt><dd>{value}</dd><dd class="note-cell">{note}</dd></div>
       ))}
     </dl>
+
+    <div class="own">
+      <h3>WHAT THE TEST EXPOSED</h3>
+      <table class="issues">
+        <caption class="sr-only">Problems the field test found in Plumbline</caption>
+        <thead>
+          <tr><th scope="col">Area</th><th scope="col">What happened</th><th scope="col">Status</th></tr>
+        </thead>
+        <tbody>
+          {issues.map((row) => (
+            <tr>
+              <th scope="row">{row.name}</th>
+              <td class="how">{row.happened}</td>
+              <td class:list={["state", { open: row.open }]}>{row.status}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
 
     <div class="own">
       <h3>RUN IT ON YOUR PRS</h3>
@@ -188,6 +215,8 @@ const rows = [
   .ledger thead th:nth-child(2) { width: 88px; }
   .commands thead th:nth-child(1) { width: 216px; }
   .commands thead th:nth-child(2) { width: 392px; }
+  .issues thead th:nth-child(1) { width: 216px; }
+  .issues thead th:nth-child(3) { width: 136px; }
   tbody tr {
     border-top: 1px solid var(--rule);
   }
@@ -207,9 +236,24 @@ const rows = [
     line-height: 18px;
   }
   .commands tbody th,
-  .commands tbody td {
+  .commands tbody td,
+  .issues tbody th,
+  .issues tbody td {
     padding-top: 9px;
     padding-bottom: 9px;
+  }
+  .issues tbody td.how {
+    padding-right: 16px;
+  }
+  .issues tbody td.state {
+    padding-right: 0;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 18px;
+  }
+  .issues tbody td.state.open {
+    color: var(--text-primary);
   }
   .name,
   .sub {
@@ -406,6 +450,7 @@ const rows = [
   @media (max-width: 1023px) {
     .commands thead th:nth-child(1) { width: 168px; }
     .commands thead th:nth-child(2) { width: 300px; }
+    .issues thead th:nth-child(1) { width: 168px; }
     .ledger thead th:nth-child(1) { width: 196px; }
     .ledger thead th:nth-child(2) { width: 72px; }
     .strip {
@@ -433,13 +478,21 @@ const rows = [
     tbody td,
     tbody td.how,
     .commands tbody th,
-    .commands tbody td {
+    .commands tbody td,
+    .issues tbody th,
+    .issues tbody td,
+    .issues tbody td.how,
+    .issues tbody td.state {
       display: block;
       width: 100%;
       padding: 0;
     }
     tbody tr {
       padding: 12px 0;
+    }
+    .issues tbody td.how,
+    .issues tbody td.state {
+      margin-top: 4px;
     }
     .ledger tbody tr {
       display: grid;

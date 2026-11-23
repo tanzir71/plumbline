@@ -382,7 +382,10 @@ test.describe("interactions", () => {
     const vendors = (await page.locator("#cost tbody th").allInnerTexts()).map((name) => name.split("\n")[0]?.trim() ?? "").filter((name) => name && !/plumbline/i.test(name));
     expect(vendors.length).toBeGreaterThan(0);
     for (const vendor of vendors) expect(text.toLowerCase()).not.toContain(vendor.toLowerCase());
-    await expect(section.locator(".ledger tbody tr")).toHaveCount(4);
+    await expect(section.locator(".ledger tbody tr")).toHaveCount(5);
+    expect(text).toContain("Judged real");
+    expect(text).toContain("Impact unclear");
+    await expect(section.locator(".issues tbody tr")).toHaveCount(3);
   });
 
   test("install starts with copyable beginner steps", async ({ page, context }) => {
