@@ -7,6 +7,7 @@ import { parse as parseYaml } from "yaml";
 import { z } from "zod";
 import { git, refExists, repoRoot, tryGit } from "@tanziro/plumbline-core";
 import { VERSION } from "./lib.js";
+import { loadPanel, panelFile } from "./panel.js";
 import { runReview } from "./review.js";
 
 export const SUITE_FILE = ".plumbline/benchmark.yml";
@@ -73,6 +74,8 @@ interface CaseResult {
   status: "ok" | "blocked";
   error?: string;
   mergeScore?: number;
+  /** API spend reported for the panel on this case. Signed-in agent plans are not included. */
+  apiCostUsd?: number;
   reviewers: Record<string, ReviewerResult>;
 }
 
@@ -82,7 +85,8 @@ export interface BenchmarkRun {
   version: string;
   agent: string | null;
   model: string | null;
-  /** Hash of the contract and custom lenses, so two runs show whether the tuning changed. */
+  panel?: boolean;
+  /** Hash of the contract, custom lenses and panel, so two runs show whether the tuning changed. */
   tuning: string;
   cases: CaseResult[];
 }
@@ -101,7 +105,11 @@ export interface BenchmarkSummary {
   reviewers: ReviewerTotals[];
   blocked: { id: string; error: string }[];
   perCase: Record<string, Record<string, { caught: string[]; missed: string[]; unlabelled: number }>>;
+  /** Panel API spend for this run, or null when it did not use a panel. */
+  apiCostUsd: number | null;
 }
+
+const apiCost = (run: BenchmarkRun) => (run.panel ? run.cases.reduce((sum, c) => sum + (c.apiCostUsd ?? 0), 0) : null);
 
 const SKELETON = `# Plumbline benchmark suite. Reviews and results stay on your machine.
 # Docs: https://tanzir71.github.io/plumbline/docs/benchmark/
@@ -262,10 +270,11 @@ function importReviewer(root: string, entry: Suite["reviewers"][string], c: Suit
   }
 }
 
-function tuningHash(root: string): string {
+function tuningHash(root: string, panel?: string): string {
   const hash = createHash("sha256");
   const contract = join(root, "plumbline.yml");
   if (existsSync(contract)) hash.update(readFileSync(contract));
+  if (panel) hash.update(readFileSync(panel));
   const lenses = join(root, ".plumbline", "lenses");
   if (existsSync(lenses)) {
     for (const name of readdirSync(lenses).sort()) {
@@ -359,7 +368,7 @@ export function summarize(run: BenchmarkRun, suite: Suite): BenchmarkSummary {
     }
   }
   const reviewers = [...totals.values()].sort((a, b) => (a.reviewer === PLUMBLINE ? -1 : b.reviewer === PLUMBLINE ? 1 : a.reviewer.localeCompare(b.reviewer)));
-  return { run: run.id, reviewers, blocked, perCase };
+  return { run: run.id, reviewers, blocked, perCase, apiCostUsd: apiCost(run) };
 }
 
 export function formatSummary(summary: BenchmarkSummary): string {
@@ -373,6 +382,7 @@ export function formatSummary(summary: BenchmarkSummary): string {
     `Benchmark ${summary.run}`,
     ...table,
     ...summary.blocked.map((b) => `Blocked ${b.id}: ${b.error}`),
+    ...(summary.apiCostUsd === null ? [] : [`Panel API cost: $${summary.apiCostUsd.toFixed(2)} (signed-in agent plans are not included)`]),
     "These counts cover only this suite's cases and labels. Unlabelled comments may still be valid.",
   ].join("\n");
 }
@@ -383,6 +393,8 @@ export interface BenchmarkRunArgs {
   agent?: string;
   model?: string;
   noAgent?: boolean;
+  panel?: boolean;
+  panelConfig?: string;
   onStatus?: (line: string) => void;
 }
 
@@ -400,13 +412,17 @@ export async function benchmarkRun(args: BenchmarkRunArgs): Promise<{ run: Bench
   const cases = plannedCases(args.cwd, args.cases);
   const status = args.onStatus ?? (() => undefined);
   const lenses = join(root, ".plumbline", "lenses");
+  // Checked against the real repository here, because each case runs in a throwaway checkout.
+  const panel = args.panel ? panelFile(args.panelConfig, args.cwd) : undefined;
+  if (panel) loadPanel(root, panel);
   const run: BenchmarkRun = {
     id: new Date().toISOString().replace(/[:.]/g, "-"),
     startedAt: new Date().toISOString(),
     version: VERSION,
     agent: args.noAgent ? null : (args.agent ?? process.env.PLUMBLINE_AGENT ?? "auto"),
     model: args.model ?? null,
-    tuning: tuningHash(root),
+    ...(panel ? { panel: true } : {}),
+    tuning: tuningHash(root, panel),
     cases: [],
   };
 
@@ -425,10 +441,13 @@ export async function benchmarkRun(args: BenchmarkRunArgs): Promise<{ run: Bench
         noAgent: args.noAgent,
         fetchBase: false,
         tunedLenses: existsSync(lenses) ? lenses : undefined,
+        panel: args.panel,
+        panelConfig: panel,
         onStatus: (line) => status(`  ${line}`),
       });
-      run.agent = review.agent ?? run.agent;
+      run.agent = review.agent ?? (panel ? null : run.agent);
       result.mergeScore = review.report.score.value;
+      if (review.panel) result.apiCostUsd = review.panel.costUsd;
       result.reviewers[PLUMBLINE] = { available: true, comments: review.report.findings.map((f) => fromObject({ ...f })) };
       for (const [name, entry] of Object.entries(suite.reviewers)) result.reviewers[name] = importReviewer(root, entry, c);
     } catch (error) {
@@ -470,6 +489,8 @@ export interface BenchmarkComparison {
   reviewers: { reviewer: string; caughtBefore: number; caughtAfter: number; unlabelledBefore: number; unlabelledAfter: number }[];
   newlyCaught: string[];
   newlyMissed: string[];
+  apiCostBefore: number | null;
+  apiCostAfter: number | null;
 }
 
 /** Compare two runs, by default the latest two, to see what a lens or contract edit changed. */
@@ -505,14 +526,19 @@ export function benchmarkCompare(cwd: string, a?: string, b?: string): Benchmark
     }),
     newlyCaught,
     newlyMissed,
+    apiCostBefore: sumBefore.apiCostUsd,
+    apiCostAfter: sumAfter.apiCostUsd,
   };
 }
+
+const costLabel = (n: number | null) => (n === null ? "not measured" : `$${n.toFixed(2)}`);
 
 export function formatComparison(c: BenchmarkComparison): string {
   return [
     `Comparing ${c.before} -> ${c.after}`,
-    `Contract or lenses changed: ${c.tuningChanged ? "yes" : "no"}`,
+    `Contract, lenses or panel changed: ${c.tuningChanged ? "yes" : "no"}`,
     ...c.reviewers.map((r) => `${r.reviewer}: caught ${r.caughtBefore} -> ${r.caughtAfter}, unlabelled ${r.unlabelledBefore} -> ${r.unlabelledAfter}`),
+    ...(c.apiCostBefore === null && c.apiCostAfter === null ? [] : [`Panel API cost: ${costLabel(c.apiCostBefore)} -> ${costLabel(c.apiCostAfter)}`]),
     ...(c.newlyCaught.length > 0 ? [`Newly caught: ${c.newlyCaught.join(", ")}`] : []),
     ...(c.newlyMissed.length > 0 ? [`Newly missed: ${c.newlyMissed.join(", ")}`] : []),
   ].join("\n");

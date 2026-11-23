@@ -10,6 +10,7 @@ import {
   plannedCases,
 } from "./benchmark.js";
 import { VERSION, runCheck, runGraph, runInit, runProve, runReport, startScope } from "./lib.js";
+import { formatPanelCheck, panelCheck, panelCheckFailed, panelFile, panelInit } from "./panel.js";
 import { runReview } from "./review.js";
 
 const HELP = `plumbline ${VERSION}: review the structure, not just the diff.
@@ -19,6 +20,7 @@ Usage: plumbline <command> [options]
 Commands
   review [target]          Run the full review with your signed-in agent. Target: PR, branch or commit
   benchmark <action>       Compare reviewers on your own labelled PRs: init, run, score, compare
+  panel <action>           Set up a mix of review models and price a change: init, check
   init                     Write a plumbline.yml skeleton, guessing modules from folders
   scope [target]           Pin the diff range and collect rule files. Target: branch, commit or PR
   graph                    Diff the JS/TS import graph between base and HEAD
@@ -32,9 +34,10 @@ Options
   --json                   Machine-readable output
   --help, --version
 
-review    --agent <codex|claude>  --model <id>  --no-agent
-benchmark run [case ...] --yes  --agent <codex|claude>  --model <id>  --no-agent
+review    --agent <codex|claude>  --model <id>  --no-agent  --panel  --panel-config <file>
+benchmark run [case ...] --yes  --agent <codex|claude>  --model <id>  --no-agent  --panel  --panel-config <file>
 benchmark score [--run <id>]  ·  benchmark compare [before] [after]  ·  benchmark init --force
+panel     init --force  ·  check [target]  ·  --panel-config <file>
 check     --contract <file>  --semgrep  --allow-custom-checks
 report    --gate  --run <id>  --findings <file>  --base-branch <name>  --contract-from <head|base>
 prove     --run <id>  --passed-on-base  --failed-on-base
@@ -93,6 +96,8 @@ async function main(argv: string[]): Promise<number> {
       agent: { type: "string" },
       model: { type: "string" },
       "no-agent": { type: "boolean", default: false },
+      panel: { type: "boolean", default: false },
+      "panel-config": { type: "string" },
       yes: { type: "boolean", default: false },
     },
   });
@@ -109,6 +114,8 @@ async function main(argv: string[]): Promise<number> {
         agent: values.agent,
         model: values.model,
         noAgent: values["no-agent"] as boolean,
+        panel: values.panel as boolean,
+        panelConfig: values["panel-config"],
         onStatus: status,
       });
       const { report } = out;
@@ -117,11 +124,33 @@ async function main(argv: string[]): Promise<number> {
           renderMarkdown(report).trimEnd(),
           "",
           `Merge score ${report.score.value}/5 (${formatCounts(report.score.counts)})`,
-          ...(out.agent ? [] : ["Graph and rule checks only. No model review ran."]),
+          ...(out.panel
+            ? [`Panel API cost: $${out.panel.costUsd.toFixed(4)} of $${out.panel.budgetUsd.toFixed(2)} budget${out.agent ? `, verified by ${out.agent}` : ", with no lead agent"}`]
+            : out.agent
+              ? []
+              : ["Graph and rule checks only. No model review ran."]),
           `Audit trail: ${out.run.dir}`,
         ].join("\n"),
       );
       return 0;
+    }
+
+    case "panel": {
+      const [action, target] = positionals;
+      switch (action) {
+        case "init": {
+          const file = panelInit(panelFile(values["panel-config"], cwd), values.force as boolean);
+          print(json, { file }, () => `Wrote ${file}\nChoose your models, set OPENROUTER_API_KEY, then run: plumbline panel check`);
+          return 0;
+        }
+        case "check": {
+          const checked = await panelCheck({ cwd, target, base: values.base, file: values["panel-config"] });
+          print(json, { file: checked.file, keys: checked.keys, plan: checked.plan, note: checked.note }, () => formatPanelCheck(checked));
+          return panelCheckFailed(checked) ? 1 : 0;
+        }
+        default:
+          throw new Error("usage: plumbline panel <init|check>");
+      }
     }
 
     case "benchmark": {
@@ -134,14 +163,16 @@ async function main(argv: string[]): Promise<number> {
         }
         case "run": {
           const noAgent = values["no-agent"] as boolean;
+          const panel = values.panel as boolean;
+          if (panel && noAgent) throw new Error("--panel and --no-agent cannot be used together");
           const cases = plannedCases(cwd, names);
           if (!noAgent && !values.yes) {
             process.stderr.write(
-              `This starts ${cases.length} agent review${cases.length === 1 ? "" : "s"} on your model account: ${cases.map((c) => c.id).join(", ")}.\nRun again with --yes to continue, or use --no-agent for graph and rule checks only.\n`,
+              `This starts ${cases.length} ${panel ? "panel" : "agent"} review${cases.length === 1 ? "" : "s"} on your model account: ${cases.map((c) => c.id).join(", ")}.${panel ? " budget_usd applies to each case." : ""}\nRun again with --yes to continue, or use --no-agent for graph and rule checks only.\n`,
             );
             return 1;
           }
-          const { summary } = await benchmarkRun({ cwd, cases: names, agent: values.agent, model: values.model, noAgent, onStatus: status });
+          const { summary } = await benchmarkRun({ cwd, cases: names, agent: values.agent, model: values.model, noAgent, panel, panelConfig: values["panel-config"], onStatus: status });
           print(json, summary, () => formatSummary(summary));
           return summary.blocked.length > 0 ? 1 : 0;
         }

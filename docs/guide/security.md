@@ -8,7 +8,8 @@ order: 13
 
 Plumbline has no backend, no account and no telemetry. Its only network calls are:
 
-- to **your model provider**, made by your agent, with your key
+- to **your model provider**, made by your agent with your key, or by the CLI when you use a [model panel](./panel.md)
+- to **OpenRouter's public model list**, to price a panel, when your panel uses OpenRouter
 - to **your GitHub or GitLab API**, to post the comment and set the label
 - to **your npm registry**, when `npx` or the CI runtime installs packages
 

@@ -38,5 +38,6 @@ Plumbline is an open-source code reviewer that runs with your own model keys. It
 
 - Write your [contract](./contract.md)
 - [Benchmark](./benchmark.md) reviewers on your own PRs
+- Mix models by cost with a [model panel](./panel.md)
 - Set up [merge gating](./gating.md) and [risk lanes](./lanes.md)
 - Read how Plumbline handles [security and data](./security.md)

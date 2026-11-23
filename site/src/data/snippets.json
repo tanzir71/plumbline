@@ -31,6 +31,7 @@
       "commands": ["plumbline review"]
     }
   ],
+  "panel": "# ~/.plumbline/panel.yml\nversion: 1\nbudget_usd: 2\nlead: codex\ndata_policy: no_retention\nexperts:\n  - id: regressions\n    provider: openrouter\n    model: google/gemini-4-carbon\n    lenses: [L01]\n  - id: architecture\n    provider: claude\n    lenses: [L02, L03, L05, L06]\n  - id: hygiene\n    provider: openrouter\n    model: moonshotai/kimi-k3.1-pro\n    lenses: [L04, L07, L08]\n",
   "githubAction":"# .github/workflows/plumbline.yml\n- uses: tanzir71/plumbline@v1\n  with:\n    model: claude-sonnet-5-5\n    key: ${{ secrets.ANTHROPIC_KEY }}",
   "gitlab": "# .gitlab-ci.yml\ninclude:\n  - remote: 'https://raw.githubusercontent.com/tanzir71/plumbline/v1/ci/gitlab/plumbline.yml'\n# CI/CD variables: PLUMBLINE_MODEL_KEY, PLUMBLINE_GITLAB_TOKEN",
   "mcp": "{ \"mcpServers\": { \"plumbline\": { \"command\": \"npx\", \"args\": [\"-y\", \"@tanziro/plumbline\", \"mcp\"] } } }",

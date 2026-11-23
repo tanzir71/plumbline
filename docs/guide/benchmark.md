@@ -93,3 +93,10 @@ When a review misses a real bug or raises a false alarm, add that PR to your sui
 Plumbline doesn't change its lenses by itself or send your results anywhere. You decide which edits to keep.
 
 After editing labels or adding another reviewer's output, run `plumbline benchmark score`. It rescores the saved run and uses no model tokens.
+
+To test a mix of models and its API cost, run the suite with a [model panel](./panel.md):
+
+```bash
+plumbline benchmark run --panel --yes
+plumbline benchmark compare
+```

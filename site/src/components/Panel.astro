@@ -1,0 +1,319 @@
+---
+import arrow from "../assets/figma/arrow-14.svg?url";
+import CopyButton from "./CopyButton.astro";
+import SectionHead from "./SectionHead.astro";
+import snippets from "../data/snippets.json";
+import { url } from "../lib/url";
+
+const ideas = [
+  {
+    expect: "Models miss different bugs",
+    note: "expert mix",
+    how: "Give each lens to a model through OpenRouter, any OpenAI-compatible API, or your signed-in Codex and Claude.",
+  },
+  {
+    expect: "Lower-cost models can do the first pass",
+    note: "cost control",
+    how: "Set a budget. Plumbline prices the worst case and stops before any paid call if it is too high.",
+  },
+  {
+    expect: "One lead can remove the noise",
+    note: "verification",
+    how: "Codex or Claude checks each candidate against the code and runs the proof tests.",
+  },
+  {
+    expect: "Agreement is not proof",
+    note: "proof gate",
+    how: "A P0 or P1 still needs a failing test, graph diff or broken rule, however many models agree.",
+  },
+];
+
+const rows = [
+  { goal: "Create your panel", run: "plumbline panel init", result: "A starter config in your home folder. Keys stay in environment variables." },
+  { goal: "Price a change", run: "plumbline panel check", result: "Each expert's worst-case cost. This spends nothing." },
+  { goal: "Review with it", run: "plumbline review --panel", result: "Expert candidates, lead verification and a merge score." },
+  { goal: "Test the hypothesis", run: "plumbline benchmark run --panel --yes", result: "Caught, missed and API cost on PRs you labelled." },
+];
+---
+
+<section id="panel" class="section bg-canvas" aria-labelledby="panel-title">
+  <div class="inner stack">
+    <SectionHead
+      id="panel-title"
+      num="10"
+      label="Model panel"
+      lines={["Better reviews for less?", "That's the hypothesis."]}
+      lead="We think a mix of lower-cost experts, checked by one lead agent and the proof gate, could deliver better results per dollar than one expensive model. We haven't measured this yet."
+    >
+      <a class="guide" href={url("docs/panel/")}>Read the panel guide <img src={arrow} alt="" width="14" height="14" /></a>
+    </SectionHead>
+
+    <div class="body">
+      <div class="idea">
+        <p class="run-bar"><span class="tag">HYPOTHESIS</span><span>not yet measured</span></p>
+        <table class="ledger">
+          <caption class="sr-only">What the model panel hypothesis expects and how Plumbline handles it</caption>
+          <thead>
+            <tr><th scope="col">We expect</th><th scope="col">How the panel handles it</th></tr>
+          </thead>
+          <tbody>
+            {ideas.map((row) => (
+              <tr>
+                <th scope="row"><span class="name">{row.expect}</span><span class="sub">{row.note}</span></th>
+                <td class="how">{row.how}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <p class="limit">We have no panel results to publish. Quality and cost depend on your code, models and change size, so benchmark it before you rely on it.</p>
+      </div>
+
+      <aside class="config" aria-labelledby="panel-config-title">
+        <div class="config-head">
+          <h3 id="panel-config-title">EXAMPLE PANEL</h3>
+          <CopyButton text={snippets.panel} label="Copy example panel" tone="plain" />
+        </div>
+        <pre tabindex="0" aria-label="Example panel config"><code>{snippets.panel}</code></pre>
+      </aside>
+    </div>
+
+    <div class="own">
+      <h3>TRY IT ON YOUR PRS</h3>
+      <table class="commands">
+        <caption class="sr-only">Commands for setting up and testing a model panel</caption>
+        <thead>
+          <tr><th scope="col">Goal</th><th scope="col">Run</th><th scope="col">What you get</th></tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr>
+              <th scope="row">{row.goal}</th>
+              <td><div class="run"><code>{row.run}</code><CopyButton text={row.run} label={`Copy ${row.run}`} tone="plain" /></div></td>
+              <td class="how">{row.result}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<style>
+  .stack {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+  .guide {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 18px;
+  }
+  .body {
+    display: flex;
+    align-items: flex-start;
+    gap: 56px;
+  }
+  .idea {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    flex: 1 1 0;
+    min-width: 0;
+  }
+  .run-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 16px;
+  }
+  .tag {
+    flex: none;
+    padding: 3px 8px;
+    border-radius: var(--r-xs);
+    background: var(--bg-raised);
+    color: var(--accent-plumb);
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 14px;
+    letter-spacing: 0.66px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
+  thead th {
+    padding: 0 0 10px;
+    text-align: left;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 14px;
+    letter-spacing: 0.88px;
+    text-transform: uppercase;
+  }
+  .ledger thead th:nth-child(1) { width: 280px; }
+  .commands thead th:nth-child(1) { width: 216px; }
+  .commands thead th:nth-child(2) { width: 392px; }
+  tbody tr {
+    border-top: 1px solid var(--rule);
+  }
+  tbody tr:last-child {
+    border-bottom: 1px solid var(--rule);
+  }
+  tbody th,
+  tbody td {
+    padding: 12px 16px 12px 0;
+    text-align: left;
+    vertical-align: middle;
+  }
+  tbody th {
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 18px;
+  }
+  .commands tbody th,
+  .commands tbody td {
+    padding-top: 9px;
+    padding-bottom: 9px;
+  }
+  .name,
+  .sub {
+    display: block;
+  }
+  .sub {
+    margin-top: 2px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 14px;
+  }
+  tbody td.how {
+    padding-right: 0;
+    color: var(--text-secondary);
+    font-size: 13px;
+    line-height: 20px;
+  }
+  .limit {
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 18px;
+  }
+  .config {
+    flex: none;
+    width: 400px;
+    min-width: 0;
+  }
+  .config-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 28px;
+    margin-bottom: 8px;
+  }
+  h3 {
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 14px;
+    letter-spacing: 0.88px;
+  }
+  pre {
+    overflow-x: auto;
+    padding: 16px;
+    border-radius: var(--r-xs);
+    background: var(--bg-raised);
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 19px;
+  }
+  pre code {
+    font-family: inherit;
+    font-variant-ligatures: none;
+  }
+  .own {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .run {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+  }
+  .run code {
+    min-width: 0;
+    color: var(--accent-plumb);
+    font-size: 13px;
+    line-height: 18px;
+    font-variant-ligatures: none;
+    overflow-wrap: anywhere;
+  }
+
+  @media (max-width: 1279px) {
+    .body {
+      flex-direction: column;
+      gap: 40px;
+    }
+    .idea {
+      flex: none;
+      width: 100%;
+    }
+    .config {
+      width: 100%;
+      max-width: 560px;
+    }
+  }
+  @media (max-width: 1023px) {
+    .ledger thead th:nth-child(1) { width: 220px; }
+    .commands thead th:nth-child(1) { width: 168px; }
+    .commands thead th:nth-child(2) { width: 300px; }
+  }
+  @media (max-width: 767px) {
+    thead {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+    }
+    table,
+    tbody,
+    tr,
+    tbody th,
+    tbody td,
+    tbody td.how,
+    .commands tbody th,
+    .commands tbody td {
+      display: block;
+      width: 100%;
+      padding: 0;
+    }
+    tbody tr {
+      padding: 12px 0;
+    }
+    .ledger tbody td.how {
+      margin-top: 6px;
+    }
+    .run {
+      justify-content: space-between;
+      margin: 2px 0;
+    }
+  }
+</style>

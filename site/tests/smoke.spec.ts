@@ -363,6 +363,15 @@ test.describe("interactions", () => {
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe("npm install -g @tanziro/plumbline");
   });
 
+  test("model panel is labelled as an unmeasured hypothesis", async ({ page }) => {
+    await page.goto(HOME);
+    const text = (await page.locator("#panel").innerText()).replace(/\s+/g, " ");
+    expect(text).toContain("HYPOTHESIS");
+    expect(text).toContain("We haven't measured this yet.");
+    expect(text).toContain("We have no panel results to publish.");
+    expect(text).toContain("plumbline benchmark run --panel --yes");
+  });
+
   test("field test shows aggregate Plumbline counts with its limits", async ({ page }) => {
     await page.goto(HOME);
     const section = page.locator("#benchmark");

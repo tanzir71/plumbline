@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- `plumbline review --panel`: give each lens to a model you choose through OpenRouter, any OpenAI-compatible API, or a signed-in Codex or Claude Code, then have one lead verify the candidates
+- `plumbline panel init` and `plumbline panel check`: create a panel and price a change without spending
+- `plumbline benchmark run --panel`: test a panel on your labelled PRs and compare its API cost
+- Budget limits, zero-data-retention routing by default, secret file withholding and token redaction for API experts
+
+### Not verified
+
+- The panel has run against simulated APIs only. Whether it improves results or cost is an unmeasured hypothesis
+
 ## 1.1.1 (2026-11-23)
 
 ### Fixed

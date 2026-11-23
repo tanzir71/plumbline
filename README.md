@@ -79,6 +79,8 @@ npm install -g @tanziro/plumbline
 plumbline review         # current branch, using your signed-in Codex or Claude Code
 plumbline review 123     # a GitHub PR
 plumbline benchmark init # compare reviewers on your own labelled PRs
+plumbline panel init     # choose a mix of review models and a budget
+plumbline review --panel # review with that panel
 ```
 
 The CLI package is `@tanziro/plumbline`. The unscoped npm package `plumbline` is an unrelated project.
