@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.2.1 (2026-11-24)
+
+### Changed
+
+- Connected import cycles inside one module now count as one finding, so one tangle costs the merge score once
+- New cycles inside one module, or in a repo with no declared modules, are now P2. Cycles that cross modules or break a rule stay P1
+- Reviewers read changed files riskiest first, and a follow-up reviewer reads any file the first passes missed. Files still unread are named in the report
+- A candidate leaves the report only when it is dismissed with code evidence. One dismissed because its impact is unclear, or never accounted for, comes back as an unresolved P2
+- The model panel splits a large change into parts, riskiest files first, and reviews every part the budget covers instead of skipping what doesn't fit
+
+### Added
+
+- `cycles.within_module` in `plumbline.yml`: set it to `P1` to keep in-module cycles at P1
+- `scope` prints a review order, and reports include `unreadFiles` and a `triage` count of how candidates were handled
+- `findings.json` accepts `from`, `unresolved` and `dismissed`
+
 ## 1.2.0 (2026-11-23)
 
 ### Added

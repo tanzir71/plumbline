@@ -15,12 +15,12 @@ head    feat/org-invoices
 diff    14 files  +412 -96
 rules   AGENTS.md  ADR-012
         plumbline.yml`}</PassColumn>
-      <PassColumn num="02" kind="review" title="Review in parallel" desc="Bug hunters trace real values while architecture lenses read the graph.">{`A  regressions     2
+      <PassColumn num="02" kind="review" title="Review in parallel" desc="Reviewers read the riskiest files first, and a follow-up pass reads any they missed.">{`A  regressions     2
 B  regressions     1
 C  architecture    3
 D  hygiene, ops    1
    candidates      `}<b>7</b></PassColumn>
-      <PassColumn num="03" kind="prove" title="Prove it or drop it" desc="Every P0 and P1 needs a failing test, a graph diff or a broken rule.">{`cycle     graph_diff  `}<span class="kept">kept</span>{`
+      <PassColumn num="03" kind="prove" title="Prove it or downgrade it" desc="P0 and P1 need a failing test, a graph diff or a broken rule. Only the code can drop a candidate.">{`cycle     graph_diff  `}<span class="kept">kept</span>{`
 tenancy   test `}<span class="fail">FAIL</span>{`   `}<span class="kept">kept</span>{`
 null qty  no repro    -> P2
 naming    style       `}<span class="dropped">dropped</span></PassColumn>

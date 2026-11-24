@@ -96,6 +96,15 @@ function footer(r: ReportV1): string[] {
     rows.push(`Skipped rules: ${r.skippedRules.map((x) => `${inline(x.id)} (${inline(x.reason)})`).join(", ")}`);
   }
   if (r.score.capReason) rows.push(`Coverage: ${inline(r.score.capReason)}`);
+  const unread = r.unreadFiles ?? [];
+  if (unread.length > 0) {
+    const named = unread.slice(0, 20).map((p) => `\`${inline(p)}\``).join(", ");
+    rows.push(`Unread: ${named}${unread.length > 20 ? ` and ${unread.length - 20} more` : ""}`);
+  }
+  if (r.triage) {
+    const t = r.triage;
+    rows.push(`Triage: ${t.candidates} candidates, ${t.merged} merged into findings, ${t.dismissed} dismissed with code evidence, ${t.restored} kept as unresolved`);
+  }
   if (r.gate?.applies) rows.push(`Gate: ${r.gate.pass ? "passed" : "failed"}. ${r.gate.reason}`);
   if (r.lane) {
     rows.push(
@@ -121,11 +130,13 @@ export function renderMarkdown(r: ReportV1): string {
     r.findings.forEach((f, i) => {
       const lock = f.security ? "🔒 " : "";
       const downgraded = f.downgradedFrom ? ` (downgraded from ${f.downgradedFrom})` : "";
-      out.push(`#### ${i + 1}. ${ICON[f.severity]} ${f.severity} · ${lock}${inline(f.lens)} · ${inline(f.title)}${location(f)}`, "");
+      const status = f.unresolved ? "Unresolved · " : "";
+      out.push(`#### ${i + 1}. ${ICON[f.severity]} ${f.severity} · ${status}${lock}${inline(f.lens)} · ${inline(f.title)}${location(f)}`, "");
       out.push(sanitize(f.body), "");
       if (f.fix) out.push(`**Fix:** ${sanitize(f.fix)}`, "");
       out.push(`**Proof:** ${proofLine(f)}${downgraded}`);
-      if (f.downgradeReason) out.push(`**Why downgraded:** ${inline(f.downgradeReason)}`);
+      if (f.unresolved) out.push(`**Not verified:** ${inline((f.downgradeReason ?? "").replace(/^Unresolved: /, ""))}`);
+      else if (f.downgradeReason) out.push(`**Why downgraded:** ${inline(f.downgradeReason)}`);
       out.push("");
     });
   } else {

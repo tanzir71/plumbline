@@ -1,5 +1,6 @@
 import type { GateDecision, LaneDecision } from "../gate.js";
 import type { MergeScore } from "../score.js";
+import type { TriageSummary } from "../triage.js";
 import type { DroppedFinding, Finding, GraphDiff } from "../types.js";
 
 export const REPORT_SCHEMA_VERSION = "1";
@@ -37,6 +38,10 @@ export interface ReportV1 {
   } | null;
   lenses: { ran: string[]; skipped: { id: string; reason: string }[] };
   reviewers: { id: string; status: "complete" | "inconclusive"; model?: string }[];
+  /** Changed files no reviewer read. */
+  unreadFiles?: string[];
+  /** How reviewer candidates were handled, when the run saved them. */
+  triage?: TriageSummary | null;
   skippedRules: { id: string; reason: string }[];
   gate: GateDecision | null;
   lane: LaneDecision | null;

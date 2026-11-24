@@ -12,6 +12,7 @@ The parser is `packages/core/src/contract/`. It validates with zod and reports e
 | `layers` | (module pattern[])[] | `[]` | Top to bottom |
 | `rules` | rule[] | `[]` | |
 | `proof` | object | see below | |
+| `cycles` | object | see below | |
 | `gate` | entry[] | `[]` | |
 | `lanes` | object | see below | |
 
@@ -52,6 +53,14 @@ proof:
   P0: [failing_test, graph_diff]
   P1: [failing_test, graph_diff, broken_rule]
 ```
+
+## Cycles
+
+| Key | Type | Default | Notes |
+|---|---|---|---|
+| `cycles.within_module` | `P1`, `P2` | `P2` | Severity of a new cycle that stays inside one module, or any file cycle in a repo with no modules |
+
+A new cycle that crosses declared modules or breaks a rule is always P1. Connected cycles inside one module are one finding.
 
 ## Gate
 

@@ -385,7 +385,8 @@ test.describe("interactions", () => {
     await expect(section.locator(".ledger tbody tr")).toHaveCount(5);
     expect(text).toContain("Judged real");
     expect(text).toContain("Impact unclear");
-    await expect(section.locator(".issues tbody tr")).toHaveCount(3);
+    await expect(section.locator(".issues tbody tr")).toHaveCount(5);
+    expect(text).toContain("Candidate triage");
   });
 
   test("install starts with copyable beginner steps", async ({ page, context }) => {

@@ -50,7 +50,9 @@
         "downgradedFrom": { "$ref": "#/definitions/severity" },
         "downgradeReason": { "type": "string" },
         "unreachable": { "type": "boolean" },
-        "styleOnly": { "type": "boolean" }
+        "styleOnly": { "type": "boolean" },
+        "from": { "type": "array", "items": { "type": "string" } },
+        "unresolved": { "type": "boolean" }
       },
       "additionalProperties": false
     },
@@ -189,6 +191,18 @@
         },
         "additionalProperties": false
       }
+    },
+    "unreadFiles": { "type": "array", "items": { "type": "string" } },
+    "triage": {
+      "type": ["object", "null"],
+      "required": ["candidates", "merged", "dismissed", "restored"],
+      "properties": {
+        "candidates": { "type": "integer", "minimum": 0 },
+        "merged": { "type": "integer", "minimum": 0 },
+        "dismissed": { "type": "integer", "minimum": 0 },
+        "restored": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
     },
     "skippedRules": { "type": "array", "items": { "$ref": "#/definitions/skip" } },
     "gate": {

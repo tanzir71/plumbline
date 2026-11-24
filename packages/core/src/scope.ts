@@ -28,6 +28,8 @@ export interface ScopeResult {
   fileAccess: string;
   size: "small" | "medium" | "large";
   files: ScopeFile[];
+  /** The same files riskiest first, which is the order reviewers read them in. */
+  reviewOrder: string[];
   skipped: ScopeFile[];
   additions: number;
   deletions: number;
@@ -60,6 +62,25 @@ export interface ScopeOptions {
 
 const GENERATED =
   /(^|\/)(package-lock\.json|npm-shrinkwrap\.json|yarn\.lock|pnpm-lock\.yaml|bun\.lockb?|poetry\.lock|uv\.lock|Pipfile\.lock|Cargo\.lock|go\.sum|Gemfile\.lock|composer\.lock|Podfile\.lock|pubspec\.lock|mix\.lock|flake\.lock)$|\.min\.(js|css)$|\.map$|\.snap$|__snapshots__\/|_pb2(_grpc)?\.py$|\.pb\.go$|\.generated\.|(^|\/)(node_modules|vendor|dist)\//;
+
+const DOC_FILE = /\.(md|mdx|txt|rst|adoc)$|(^|\/)(LICENSE|NOTICE|CHANGELOG)[^/]*$/i;
+const TEST_FILE = /(^|\/)(__tests__|__mocks__|tests?|spec|specs|e2e|fixtures)\/|[._-](test|spec)\.[^/]+$|(^|\/)test_[^/]+$/i;
+const CONFIG_FILE = /\.(json|ya?ml|toml|ini|cfg|conf|properties)$|(^|\/)\.[^/]+rc(\.[^/]+)?$|(^|\/)(Dockerfile|Makefile|Procfile)$/i;
+
+/** 0 for source code, 1 for config, 2 for tests, 3 for docs. Lower is read first. */
+export function riskRank(path: string): number {
+  if (DOC_FILE.test(path)) return 3;
+  if (TEST_FILE.test(path)) return 2;
+  if (CONFIG_FILE.test(path)) return 1;
+  return 0;
+}
+
+/** Changed files riskiest first: source before config, tests and docs, then the most changed lines. */
+export function reviewOrder(files: ScopeFile[]): string[] {
+  return [...files]
+    .sort((a, b) => riskRank(a.path) - riskRank(b.path) || b.additions + b.deletions - (a.additions + a.deletions) || a.path.localeCompare(b.path))
+    .map((f) => f.path);
+}
 
 const PLUMBLINE_OUTPUT = /^\.plumbline\/(run|proofs)\//;
 const RULE_NAMES = new Set(["AGENTS.md", "agents.md", "AGENTS.override.md", "CLAUDE.md", "GEMINI.md"]);
@@ -404,6 +425,7 @@ export function resolveScope(options: ScopeOptions = {}): ScopeResult {
     fileAccess,
     size,
     files,
+    reviewOrder: reviewOrder(files),
     skipped,
     additions,
     deletions,
@@ -435,6 +457,8 @@ export function formatScope(s: ScopeResult): string {
     `SIZE: ${s.size} - ${s.files.length} files, +${s.additions}/-${s.deletions} (${s.changedLines} changed lines, skipped files excluded)`,
     "FILES (diff order):",
     ...list(s.files.map(fileLine)),
+    "REVIEW ORDER (riskiest first):",
+    ...list(s.reviewOrder ?? []),
   ];
   if (s.skipped.length > 0) lines.push("SKIPPED (lockfile, generated or binary):", ...list(s.skipped.map(fileLine)));
   if (s.pr) lines.push(`PR: ${s.pr.url}`, "PR BODY (first 60 lines):", ...s.pr.body.split("\n").map((l) => `  ${l}`));

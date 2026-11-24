@@ -30,7 +30,17 @@ Do not include the cycles and rule violations from step 2: the CLI adds those it
       "fix": "Filter by ctx.orgId, as every sibling method does.",
       "proof": [
         { "kind": "failing_test", "ref": ".plumbline/proofs/invoice.tenant.test.js" }
-      ]
+      ],
+      "from": ["A2", "C1"]
+    }
+  ],
+  "dismissed": [
+    {
+      "candidate": "B4",
+      "reason": "guarded",
+      "evidence": "parseLimit() clamps the value to 1-100 before the query runs.",
+      "file": "src/api/limits.js",
+      "line": 18
     }
   ]
 }
@@ -47,5 +57,22 @@ Do not include the cycles and rule violations from step 2: the CLI adds those it
 | `proof[].ref` | Test path, edge or cycle, or rule/ADR id |
 | `proof[].detail` | Optional evidence, such as the quoted rule |
 | `unreachable`, `styleOnly` | Set if verification showed this. An unproven finding with either flag is dropped |
+| `from` | The candidate ids this finding covers, such as `A2` or `C1` |
+| `unresolved` | You could neither confirm nor rule it out. It is shown at P2 at most |
 
-List any reviewer that failed as `inconclusive`, and any file nobody read in `unreadFiles`. Both cap the score at 4/5.
+## Dismissed candidates
+
+Every candidate id from the reviewer reports or the panel must appear in a finding's `from` or in `dismissed`. `plumbline report` puts back anything else as an unresolved P2. Only when no finding uses `from` does a finding within 10 lines in the same file count as covering a candidate.
+
+| `reason` | Use it when | Needs |
+|---|---|---|
+| `guarded` | Code already prevents the failure | `evidence`, `file`, `line` |
+| `pre_existing` | The base commit behaves the same way | `evidence`, `file`, `line` at the base commit |
+| `not_reachable` | No caller or input reaches the path | `evidence`, `file`, `line` |
+| `misread` | The candidate misdescribes what the code does | `evidence`, `file`, `line` |
+| `stated_decision` | The PR, an ADR or a rule file says this is intended | `evidence` quoting it |
+| `style` | Naming, formatting or linter-level only | `evidence` |
+
+Any other reason, such as "impact unclear", does not dismiss the candidate.
+
+List any reviewer that failed as `inconclusive`, and any file nobody read in `unreadFiles`. Both cap the score at 4/5. The report also counts a file as unread when every saved reviewer report says it skipped it.

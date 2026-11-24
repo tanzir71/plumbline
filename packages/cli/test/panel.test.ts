@@ -1,5 +1,5 @@
 import { spawn, spawnSync } from "node:child_process";
-import { chmodSync, existsSync, mkdtempSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
 import { createServer } from "node:http";
 import type { AddressInfo } from "node:net";
 import { tmpdir } from "node:os";
@@ -13,6 +13,7 @@ import {
   assertWithinBudget,
   buildPanelContext,
   cleanCandidates,
+  fitToBudget,
   loadPanel,
   mergeCandidates,
   parsePanel,
@@ -190,9 +191,10 @@ describe("what leaves the machine", () => {
       linked = false; // Windows needs a privilege to create symlinks.
     }
     const context = buildPanelContext(resolveScope({ cwd: repo, base: "main" }), null, 120000);
+    const sent = context.parts.map((p) => p.text).join("\n");
     expect(context.withheld).toContain(".env");
-    expect(context.text).not.toContain("ENV_SECRET_VALUE");
-    if (linked) expect(context.text).not.toContain("OUTSIDE_THE_REPO");
+    expect(sent).not.toContain("ENV_SECRET_VALUE");
+    if (linked) expect(sent).not.toContain("OUTSIDE_THE_REPO");
   }, T);
 
   it("records files that do not fit as unread", () => {
@@ -200,12 +202,27 @@ describe("what leaves the machine", () => {
     writeFileSync(join(repo, "large.txt"), "x".repeat(20000));
     const context = buildPanelContext(resolveScope({ cwd: repo, base: "main" }), null, 1000);
     expect(context.unread).toContain("large.txt");
-    expect(context.text).not.toContain("x".repeat(100));
+    expect(context.parts.map((p) => p.text).join("\n")).not.toContain("x".repeat(100));
+  }, T);
+
+  it("splits a large change into parts, riskiest files first, instead of leaving files unread", () => {
+    const repo = materialize("clean");
+    mkdirSync(join(repo, "src"), { recursive: true });
+    writeFileSync(join(repo, "notes.md"), `${"note line\n".repeat(150)}`);
+    writeFileSync(join(repo, "src", "billing.ts"), `${"export const charge = 1;\n".repeat(150)}`);
+    writeFileSync(join(repo, "src", "billing.test.ts"), `${"it('charges', () => {});\n".repeat(150)}`);
+    const scope = resolveScope({ cwd: repo, base: "main" });
+    const context = buildPanelContext(scope, null, 3000);
+    expect(context.parts.length).toBeGreaterThan(1);
+    expect(context.unread).toEqual([]);
+    expect([...context.parts[0]!.lines.keys()][0]).toBe("src/billing.ts");
+    expect([...context.lines.keys()]).toEqual(expect.arrayContaining(["notes.md", "src/billing.test.ts", "src/billing.ts"]));
+    expect([...context.lines.keys()].indexOf("notes.md")).toBe(context.lines.size - 1);
   }, T);
 });
 
 describe("cost control", () => {
-  const context: PanelContext = { text: "a".repeat(2000), lines: new Map(), unread: [], withheld: [] };
+  const context: PanelContext = { parts: [{ text: "a".repeat(2000), lines: new Map() }], lines: new Map(), unread: [], withheld: [] };
   const config = (budget: number, model = "vendor/model") =>
     parsePanel(`version: 1\nbudget_usd: ${budget}\nexperts: [{ id: a, provider: openrouter, model: ${model}, lenses: [L01] }]`);
   const lenses = new Map([["a", [{ id: "L01", name: "L", body: "b", file: "", custom: false, default: "on", proof: [], catches: "", example: "" } as never]]]);
@@ -232,6 +249,18 @@ describe("cost control", () => {
   it("stops before spending when the worst case is over budget", async () => {
     const plan = await planPanel(config(0.01), context, lenses, fakeFetch([endpoint("0.00001", "0.00001", ["structured_outputs", "max_tokens"])]));
     expect(() => assertWithinBudget(plan)).toThrow("Nothing was spent");
+  });
+
+  it("covers the riskiest parts the budget allows and names the rest as unread", async () => {
+    const parts = ["src/a.ts", "src/b.ts", "src/c.ts"].map((file) => ({ text: "a".repeat(2000), lines: new Map([[file, 10]]) }));
+    const split: PanelContext = { parts, lines: new Map(parts.flatMap((p) => [...p.lines])), unread: [], withheld: [] };
+    const full = await planPanel(config(100), split, lenses, fakeFetch([endpoint("0.00001", "0.00001", ["structured_outputs", "max_tokens"])]));
+    const perPart = full.experts[0]!.partUsd[0]!;
+    const fitted = fitToBudget({ ...full, budgetUsd: perPart * 2.5 }, split);
+    expect(fitted.context.parts).toHaveLength(2);
+    expect(fitted.context.unread).toEqual(["src/c.ts"]);
+    expect(fitted.plan.worstCaseUsd).toBeLessThanOrEqual(perPart * 2.5);
+    expect(fitToBudget(full, split).context.parts).toHaveLength(3);
   });
 
   it("refuses a model with no eligible endpoint or a dynamic price", async () => {

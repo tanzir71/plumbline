@@ -132,6 +132,16 @@ describe("loadContract extends", () => {
     expect(c?.gate[0]?.min_merge_score).toBe(3);
   });
 
+  it("inherits cycle severity unless the child sets it", () => {
+    const base = "version: 1\ncycles:\n  within_module: P1\n";
+    expect(loadContract(repo({ "base.yml": base, "plumbline.yml": "version: 1\nextends: ./base.yml\n" }))?.cycles.within_module).toBe("P1");
+    expect(
+      loadContract(repo({ "base.yml": base, "plumbline.yml": "version: 1\nextends: ./base.yml\ncycles:\n  within_module: P2\n" }))?.cycles.within_module,
+    ).toBe("P2");
+    expect(parseContract("version: 1\n").cycles.within_module).toBe("P2");
+    expect(() => parseContract("version: 1\ncycles:\n  within_module: P0\n")).toThrow(ContractError);
+  });
+
   it("refuses remote contracts", () => {
     const root = repo({ "plumbline.yml": "version: 1\nextends: https://example.com/x.yml\n" });
     expect(() => loadContract(root)).toThrow(/local path/);

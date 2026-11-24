@@ -4,7 +4,7 @@ description: Pre-merge code review that checks the structure, not just the diff.
 license: MIT
 compatibility: Needs git and Node 20+. Optional - a sub-agent tool for parallel reviewers, gh for PR mode. Graph checks cover JS/TS; the model lenses work in any language.
 metadata:
-  version: "1.2.0"
+  version: "1.2.1"
   source: https://github.com/tanzir71/plumbline
 ---
 
@@ -57,7 +57,7 @@ plumbline graph --base <base> --json
 plumbline check --json
 ```
 
-`graph` reports added and removed import edges, new cycles with their full path, and edges that cross layers. `check` evaluates the contract's `forbid` and `layers` rules against HEAD. `check` exits 1 when a rule is violated, which is a result and not a failure of the tool. Its `llmRules` are the judgement rules for the reviewers. New cycles and new violations become P1 findings automatically in step 5, one per root cause, so do not restate them. The graph covers JS/TS only: for other languages, say in the report that the graph lens did not run on those files.
+`graph` reports added and removed import edges, new cycles with their full path, and edges that cross layers. `check` evaluates the contract's `forbid` and `layers` rules against HEAD. `check` exits 1 when a rule is violated, which is a result and not a failure of the tool. Its `llmRules` are the judgement rules for the reviewers. New cycles and new violations become findings automatically in step 5, one per root cause, so do not restate them. Cycles that cross modules or break a rule are P1. Cycles inside one module follow `cycles.within_module`, which defaults to P2. The graph covers JS/TS only: for other languages, say in the report that the graph lens did not run on those files.
 
 ## Step 3: Reviewers in parallel
 
@@ -80,7 +80,7 @@ REVIEWER: <A | B | C | D>            LENSES: <ids and the focus from the table>
 REPO: <absolute path>                SCOPE: <scope line>
 DIFF: <diffCommand from scope>
 FILE ACCESS: <fileAccess from scope>
-FILES (read in this order): <A, C: diff order | B, D: reverse order>
+FILES (read in this order): <A, C: REVIEW ORDER from scope | B, D: the same list reversed>
 INTENT: <2-5 lines>                  STATED DECISIONS: <list, or none>
 CONTRACT: <path or none>             ADRS: <paths>
 RULE FILES: <paths>                  LESSON FILES: <paths>
@@ -92,11 +92,17 @@ PREVIOUS FINDINGS: <re-review only: number, title, location>
 
 Wait for all of them. If they are sub-agents, don't review the change yourself while they run. If one fails or stalls, ask it once to finish within 10 tool calls; if that fails, mark it `inconclusive`, never clean.
 
+Save each reviewer's report verbatim to `<run directory>/reviewers/<id>.md`, for example `reviewers/A.md`. `plumbline report` reads them to check that every candidate was handled and which files were read.
+
+### Close coverage gaps
+
+Read every report's COVERAGE line. A changed file counts as read once any reviewer read it. If some changed files nobody read, start one more reviewer, `G1`, with `references/reviewer-brief.md`, lenses L01 and L04, those files in REVIEW ORDER and the BUDGET for their size. Save its report as `reviewers/G1.md`. If files are still unread, run `G2` the same way. List whatever is left in `unreadFiles`, which caps the score at 4/5 and names the files in the report.
+
 ## Step 4: Verify and prove
 
-1. Merge candidates with the same root cause. Keep the most precise location, the strongest evidence and the highest justified priority, and note who found it.
-2. Verify. Found by more than one: check the location and evidence. Found by one: read the code yourself and confirm that the change introduced it, a real input or path triggers it, nothing already guards it, and the priority fits. Downgrade or drop what doesn't hold up. One reviewer's clean report never cancels a finding another proved.
-3. Drop style, linter-level issues, speculation, untouched pre-existing problems, and anything a stated decision covers.
+1. Merge candidates with the same root cause. Keep the most precise location, the strongest evidence and the highest justified priority, and list every merged candidate id (such as `A3`) in the finding's `from`.
+2. Verify. Found by more than one: check the location and evidence. Found by one: read the code yourself and confirm that the change introduced it, a real input or path triggers it, nothing already guards it, and the priority fits. Downgrade what doesn't hold up. One reviewer's clean report never cancels a finding another proved.
+3. Account for every candidate id. A candidate leaves the report only when you dismiss it in `dismissed` with a reason from [references/findings.md](references/findings.md): code that guards it, the same behavior at the base commit, no path that reaches it, a misread of the code, a stated decision, or style. For the first four, cite the file and line that rule it out. If you can neither confirm nor rule out a candidate, keep it at P2 with `unresolved: true`. Never dismiss one only because its impact or intent is unclear. `plumbline report` puts back any candidate you didn't account for, as an unresolved P2.
 4. Prove every remaining P0 and P1, following [references/proof.md](references/proof.md). For `failing_test`, write the test under `.plumbline/proofs/` and run it through `plumbline prove`. A test you ran any other way does not count. Never commit proof tests outside review-and-fix mode.
 
 Priorities:

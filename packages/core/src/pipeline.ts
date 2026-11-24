@@ -17,6 +17,7 @@ import { computeScore } from "./score.js";
 import type { ScopeResult } from "./scope.js";
 import { PROOF_KINDS, SEVERITIES, type CheckResult, type Finding, type GraphDiff, type ImportGraph } from "./types.js";
 import type { RunDir } from "./run.js";
+import { capUnresolved, triageCandidates, unreadFromReports, type Candidate, type ReviewerReport, type TriageSummary } from "./triage.js";
 
 export interface GraphRun {
   base: ImportGraph;
@@ -98,6 +99,16 @@ const findingInput = z.object({
   proof: z.array(proofInput).optional(),
   unreachable: z.boolean().optional(),
   styleOnly: z.boolean().optional(),
+  from: z.array(z.string().min(1)).optional(),
+  unresolved: z.boolean().optional(),
+});
+
+const dismissalInput = z.object({
+  candidate: z.string().min(1),
+  reason: z.string().min(1),
+  evidence: z.string().default(""),
+  file: z.string().optional(),
+  line: z.number().int().positive().optional(),
 });
 
 export const findingsFileSchema = z.object({
@@ -113,6 +124,7 @@ export const findingsFileSchema = z.object({
     .prefault({}),
   unreadFiles: z.array(z.string()).default([]),
   findings: z.array(findingInput).default([]),
+  dismissed: z.array(dismissalInput).default([]),
 });
 
 export type FindingsFile = z.output<typeof findingsFileSchema>;
@@ -153,6 +165,8 @@ export interface FinalizeInput {
   /** Set false to skip the risk lane decision. */
   useLane?: boolean;
   lenses?: LensInfo[];
+  /** Reviewer reports and panel candidates saved in the run, from `loadCandidates`. */
+  candidates?: { candidates: Candidate[]; reports: ReviewerReport[] } | null;
   now?: Date;
 }
 
@@ -161,7 +175,15 @@ export function finalizeReport(input: FinalizeInput): ReportV1 {
   const { scope, contract, graph } = input;
   const parsed = input.modelFile === undefined ? null : parseFindingsFile(input.modelFile);
   const deterministic = graph ? deterministicFindings(graph.diff, graph.check, contract) : [];
-  const allFindings = mergeFindings(deterministic, parsed?.findings ?? []);
+  const modelFindings = (parsed?.findings ?? []).map(capUnresolved);
+  let triage: TriageSummary | null = null;
+  if (parsed && input.candidates) {
+    const ctx = { root: scope.repo, headSha: scope.headSha, mergeBase: scope.mergeBase };
+    const result = triageCandidates(input.candidates.candidates, modelFindings, parsed.meta.dismissed, ctx);
+    modelFindings.push(...result.restored);
+    triage = result.summary;
+  }
+  const allFindings = mergeFindings(deterministic, modelFindings);
 
   // A lens the team turned off reports nothing, whether its findings came from the graph or a model.
   const disabled = new Set((input.lenses ?? []).filter((l) => l.default === "off").map((l) => l.id));
@@ -193,7 +215,10 @@ export function finalizeReport(input: FinalizeInput): ReportV1 {
   const reasons: string[] = [];
   const inconclusive = parsed?.meta.reviewers.filter((r) => r.status === "inconclusive").map((r) => r.id) ?? [];
   if (inconclusive.length > 0) reasons.push(`reviewer ${inconclusive.join(", ")} inconclusive`);
-  if (parsed && parsed.meta.unreadFiles.length > 0) reasons.push(`${parsed.meta.unreadFiles.length} files left unread`);
+  // A file every reviewer said it skipped is unread, whatever the summary claims.
+  const reportUnread = parsed && input.candidates ? unreadFromReports(input.candidates.reports, scope.files.map((f) => f.path)) : null;
+  const unreadFiles = parsed ? [...new Set([...parsed.meta.unreadFiles, ...(reportUnread ?? [])])] : [];
+  if (unreadFiles.length > 0) reasons.push(`${unreadFiles.length} files left unread`);
   const score = computeScore({ findings, incomplete: reasons.join("; ") || undefined });
 
   const baseBranch = input.baseBranch ?? scope.pr?.baseBranch ?? scope.baseRef?.replace(/^origin\//, "") ?? "";
@@ -259,6 +284,8 @@ export function finalizeReport(input: FinalizeInput): ReportV1 {
       : null,
     lenses: { ran: parsed ? ranLenses : graph && !disabled.has("L02") ? ["L02"] : [], skipped: skippedLenses },
     reviewers: parsed?.meta.reviewers ?? [],
+    unreadFiles,
+    triage,
     skippedRules: graph?.check.skippedRules ?? [],
     gate,
     lane,

@@ -116,6 +116,6 @@ suggestion: <optional, at most 6 lines>
 CHECKED:
 - <what you verified clean: conventions compared, callers traced, rules checked, decisions respected>
 - <each command you ran and its result, for example "pytest tests/test_fees.py -q: 12 passed">
-COVERAGE: all <n> files read | not read: <files and why>
+COVERAGE: all <n> files read | not read: <exact repo paths, comma separated, then why>
 PREVIOUS FINDINGS: <re-review only: one line per finding, Fixed | Still open | Withdrawn, with evidence>
 ```

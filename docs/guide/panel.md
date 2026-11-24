@@ -83,7 +83,7 @@ Set `provider: codex` or `provider: claude` to use a plan you already have. Thos
 | `budget_usd` | Required | The most one review may cost in API calls, checked before it starts |
 | `lead` | `auto` | Who verifies candidates: `auto`, `codex`, `claude` or `none` |
 | `data_policy` | `no_retention` | `no_retention` uses zero-data-retention endpoints. `no_training` uses providers that don't collect your data |
-| `max_input_tokens` | `120000` | How much of the change each API expert receives |
+| `max_input_tokens` | `120000` | The most each API request may carry. A larger change is split into parts, riskiest files first, and each API expert reads every part the budget covers |
 | `max_output_tokens` | `12000` | The longest answer an API expert may write |
 | `experts[].id` | Required | A short name shown in the report |
 | `experts[].provider` | Required | `openrouter`, `codex`, `claude`, or a name under `providers` |
@@ -115,7 +115,8 @@ Check the provider's current price, because Plumbline uses your number for the b
 
 - **Agreement is not proof.** A P0 or P1 still needs a failing test, a graph diff or a broken rule, however many models agree.
 - **With no lead, serious candidates show at P2.** API experts can't run proof tests.
-- **Failures count.** If an expert fails or a changed file doesn't fit, the merge score is capped at 4/5. If every expert fails, there is no score.
+- **Every candidate is accounted for.** The lead must merge, dismiss with code evidence, or keep each candidate. Anything else comes back as an unresolved P2.
+- **Failures count.** If an expert fails, or the budget doesn't cover every part of the change, the merge score is capped at 4/5 and the unread files are named. If every expert fails, there is no score.
 - **Nothing approves or merges.** A person still decides.
 
 ## Cost and privacy

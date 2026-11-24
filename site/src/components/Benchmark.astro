@@ -14,7 +14,24 @@ const results = [
 ];
 
 const issues = [
-  { name: "Cycle scoring", happened: "One PR scored 0/5, mostly from automatic P1 cycles. Four of those paths shared one dependency cluster.", status: "Open", open: true },
+  {
+    name: "Cycle scoring",
+    happened: "One PR scored 0/5, mostly from automatic P1 cycles. Four of those paths shared one dependency cluster.",
+    status: "Fixed in 1.2.1",
+    open: false,
+  },
+  {
+    name: "Unread files",
+    happened: `Large reviews left changed files unread, up to ${fieldTest.largestUnreadPaths.toLocaleString("en-US")} paths in one PR, and the report only counted them.`,
+    status: "Improved in 1.2.1",
+    open: false,
+  },
+  {
+    name: "Candidate triage",
+    happened: `${fieldTest.candidatesRejectedUnclear} of ${fieldTest.candidatesRejected} rejected candidates were dropped because their impact was unclear, not because the code ruled them out.`,
+    status: "Fixed in 1.2.1",
+    open: false,
+  },
   { name: "Graph scope", happened: "An earlier run changed scope and reported existing cycles as new.", status: "Fixed in 1.1.0", open: false },
   { name: "Proof status", happened: "A test runner crash was recorded as a failing test. That run stayed unscored.", status: "Fixed in 1.1.1", open: false },
 ];

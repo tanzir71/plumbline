@@ -229,11 +229,19 @@ const numbered = (text: string) =>
     .map((line, i) => `${i + 1}| ${line}`)
     .join("\n");
 
-export interface PanelContext {
+/** One request's worth of the change. */
+export interface PanelPart {
   text: string;
-  /** Files sent to API experts. The value is the line count, or null when only the diff was sent. */
+  /** Files in this part. The value is the line count, or null when only the diff was sent. */
   lines: Map<string, number | null>;
-  /** Too large for max_input_tokens. */
+}
+
+export interface PanelContext {
+  /** The change split to fit max_input_tokens, riskiest files first. Each API expert reads every part. */
+  parts: PanelPart[];
+  /** Files sent to API experts, across all parts. */
+  lines: Map<string, number | null>;
+  /** Too large for max_input_tokens, or in a part the budget did not cover. */
   unread: string[];
   /** Looks like a secret, so it is never sent to an API expert. */
   withheld: string[];
@@ -264,17 +272,34 @@ function contextHeader(scope: ScopeResult, graph: { diff: GraphDiff; check: Chec
   return redact(parts.join("\n\n"));
 }
 
-/** What API experts read: the change and the team's rules, within max_input_tokens. */
+/**
+ * What API experts read: the change and the team's rules, split into parts that each fit max_input_tokens.
+ * Files go in riskiest first, so when the budget covers fewer parts the most important code is still read.
+ */
 export function buildPanelContext(scope: ScopeResult, graph: { diff: GraphDiff; check: CheckResult } | null, maxInputTokens: number): PanelContext {
   const limit = maxInputTokens * CONTEXT_CHARS_PER_TOKEN;
   const range = scope.mode === "worktree" ? [scope.mergeBase] : [scope.mergeBase, scope.headSha];
-  const sections = [contextHeader(scope, graph, limit)];
-  let used = sections[0]!.length;
-  const lines = new Map<string, number | null>();
+  const header = contextHeader(scope, graph, limit);
+  const parts: PanelPart[] = [];
   const unread: string[] = [];
   const withheld: string[] = [];
+  const fresh = () => ({ sections: [header], used: header.length, lines: new Map<string, number | null>() });
+  let current = fresh();
+  const flush = () => {
+    if (current.lines.size > 0) parts.push({ text: current.sections.join("\n\n"), lines: current.lines });
+    current = fresh();
+  };
+  const add = (path: string, text: string, count: number | null) => {
+    if (current.used + text.length > limit) return false;
+    current.sections.push(text);
+    current.used += text.length;
+    current.lines.set(path, count);
+    return true;
+  };
 
-  for (const file of scope.files) {
+  const order = new Map((scope.reviewOrder ?? []).map((path, i) => [path, i]));
+  const ordered = [...scope.files].sort((a, b) => (order.get(a.path) ?? 0) - (order.get(b.path) ?? 0));
+  for (const file of ordered) {
     if (SECRET_FILE.test(file.path)) {
       withheld.push(file.path);
       continue;
@@ -286,19 +311,46 @@ export function buildPanelContext(scope: ScopeResult, graph: { diff: GraphDiff; 
     const head = `### FILE ${file.path} (${file.status})`;
     const whole = [head, diff && `--- diff ---\n${diff}`, content !== null && `--- file with line numbers ---\n${numbered(content)}`].filter(Boolean).join("\n");
     const diffOnly = [head, `--- diff ---\n${diff}`].join("\n");
-    if (used + whole.length <= limit && (diff || content !== null)) {
-      sections.push(whole);
-      used += whole.length;
-      lines.set(file.path, content === null ? null : content.split(/\r?\n/).length);
-    } else if (diff && used + diffOnly.length <= limit) {
-      sections.push(diffOnly);
-      used += diffOnly.length;
-      lines.set(file.path, null);
-    } else {
+    const count = content === null ? null : content.split(/\r?\n/).length;
+    if (!diff && content === null) {
       unread.push(file.path);
+      continue;
     }
+    if (add(file.path, whole, count)) continue;
+    // Start a new part before giving up on the whole file.
+    if (current.lines.size > 0) {
+      flush();
+      if (add(file.path, whole, count)) continue;
+    }
+    if (diff && add(file.path, diffOnly, null)) continue;
+    unread.push(file.path);
   }
-  return { text: sections.join("\n\n"), lines, unread, withheld };
+  flush();
+  const lines = new Map(parts.flatMap((p) => [...p.lines]));
+  return { parts, lines, unread, withheld };
+}
+
+/**
+ * Keep the riskiest parts the budget covers. Files in the parts left out are named as unread.
+ * Returns the plan unchanged when every part fits.
+ */
+export function fitToBudget(plan: PanelPlan, context: PanelContext): { plan: PanelPlan; context: PanelContext } {
+  const total = context.parts.length;
+  const sum = (xs: number[]) => xs.reduce((a, b) => a + b, 0);
+  const costOf = (k: number) => sum(plan.experts.map((e) => sum(e.partUsd.slice(0, k))));
+  let k = total;
+  while (k > 1 && costOf(k) > plan.budgetUsd) k--;
+  if (k >= total) return { plan, context };
+  const kept = context.parts.slice(0, k);
+  const left = context.parts.slice(k).flatMap((p) => [...p.lines.keys()]);
+  return {
+    plan: {
+      ...plan,
+      experts: plan.experts.map((e) => ({ ...e, partUsd: e.partUsd.slice(0, k), worstCaseUsd: sum(e.partUsd.slice(0, k)) })),
+      worstCaseUsd: costOf(k),
+    },
+    context: { ...context, parts: kept, lines: new Map(kept.flatMap((p) => [...p.lines])), unread: [...context.unread, ...left] },
+  };
 }
 
 /** The lenses each expert covers. Without a list, an expert covers every enabled lens. */
@@ -353,7 +405,7 @@ const FINDINGS_JSON_SCHEMA = {
   },
 } as const;
 
-function expertMessages(context: PanelContext, lenses: Lens[]) {
+function expertMessages(part: PanelPart, lenses: Lens[], index = 0, total = 1) {
   const tag = `repository-data-${randomBytes(6).toString("hex")}`;
   const system = `You are one expert on a code review panel. Review only this change, through the lenses you are given.
 
@@ -371,9 +423,13 @@ For each finding, give the mechanism, a concrete trigger and the consequence. Us
 
 Return only JSON: {"findings":[{"severity":"P1","lens":"L01","title":"3-7 plain words","body":"one short paragraph","file":"path","line":12,"endLine":14,"security":false,"fix":"short fix or null"}]}. An empty list is a valid result.`;
   const lensText = lenses.map((l) => `## ${l.id} ${l.name}\n${l.body}`).join("\n\n");
+  const partNote =
+    total > 1
+      ? `\n\nThis request covers part ${index + 1} of ${total} of the change. Other changed files are reviewed in separate requests, so code missing from this part is not a defect.`
+      : "";
   return [
     { role: "system", content: system },
-    { role: "user", content: `YOUR LENSES\n\n${lensText}\n\n<${tag}>\n${context.text}\n</${tag}>` },
+    { role: "user", content: `YOUR LENSES\n\n${lensText}${partNote}\n\n<${tag}>\n${part.text}\n</${tag}>` },
   ];
 }
 
@@ -390,6 +446,8 @@ export interface ExpertPlan {
   outputPerToken: number;
   tokenParam: "max_tokens" | "max_completion_tokens";
   worstCaseUsd: number;
+  /** Worst case for each part of the change. Empty for agent experts, which read the repository themselves. */
+  partUsd: number[];
 }
 
 export interface PanelPlan {
@@ -442,7 +500,7 @@ export async function planPanel(config: PanelConfig, context: PanelContext, lens
       const assigned = lenses.get(e.id) ?? [];
       const base = { id: e.id, provider: e.provider, model: e.model ?? null, lenses: assigned.map((l) => l.id) };
       if (isAgentProvider(e.provider)) {
-        return { ...base, kind: "agent", inputTokens: 0, inputPerToken: 0, outputPerToken: 0, tokenParam: "max_tokens", worstCaseUsd: 0 };
+        return { ...base, kind: "agent", inputTokens: 0, inputPerToken: 0, outputPerToken: 0, tokenParam: "max_tokens", worstCaseUsd: 0, partUsd: [] };
       }
       const route =
         e.provider === OPENROUTER
@@ -452,9 +510,12 @@ export async function planPanel(config: PanelConfig, context: PanelContext, lens
               outputPerToken: (e.price as NonNullable<typeof e.price>).output_per_million / 1e6,
               tokenParam: "max_tokens" as const,
             };
-      const chars = expertMessages(context, assigned).reduce((sum, m) => sum + m.content.length, 0);
-      const inputTokens = Math.ceil(chars / WORST_CHARS_PER_TOKEN);
-      return { ...base, kind: "api", inputTokens, ...route, worstCaseUsd: inputTokens * route.inputPerToken + config.max_output_tokens * route.outputPerToken };
+      const tokens = context.parts.map((part, i) =>
+        Math.ceil(expertMessages(part, assigned, i, context.parts.length).reduce((sum, m) => sum + m.content.length, 0) / WORST_CHARS_PER_TOKEN),
+      );
+      const partUsd = tokens.map((t) => t * route.inputPerToken + config.max_output_tokens * route.outputPerToken);
+      const inputTokens = tokens.reduce((a, b) => a + b, 0);
+      return { ...base, kind: "api", inputTokens, ...route, worstCaseUsd: partUsd.reduce((a, b) => a + b, 0), partUsd };
     }),
   );
   return { experts, worstCaseUsd: experts.reduce((sum, e) => sum + e.worstCaseUsd, 0), budgetUsd: config.budget_usd };
@@ -493,6 +554,8 @@ export interface PanelCandidate {
   security?: boolean;
   fix?: string;
   foundBy: string[];
+  /** Set after merging, such as `C3`. The lead accounts for every id. */
+  id?: string;
 }
 
 function parseJsonOutput(text: string): unknown {
@@ -713,8 +776,12 @@ async function runExpert(input: RunPanelInput, plan: ExpertPlan, dir: string): P
     inputTokens: 0,
     outputTokens: 0,
   };
+  const keep = (output: unknown) => {
+    const { kept, invalid } = cleanCandidates(output, plan.id, lensIds, scopeFiles, context.lines);
+    result.candidates.push(...kept);
+    result.invalid += invalid;
+  };
   try {
-    let output: unknown;
     if (plan.kind === "agent") {
       const lensFile = join(dir, `${plan.id}.lenses.md`);
       const outputFile = join(dir, `${plan.id}.output.json`);
@@ -728,28 +795,29 @@ async function runExpert(input: RunPanelInput, plan: ExpertPlan, dir: string): P
         logFile: join(dir, `${plan.id}.log`),
       });
       if (code !== 0 || !existsSync(outputFile)) throw new Error(`${plan.provider} did not finish (exit ${code})`);
-      output = parseJsonOutput(readFileSync(outputFile, "utf8"));
+      keep(parseJsonOutput(readFileSync(outputFile, "utf8")));
     } else {
       const url = plan.provider === OPENROUTER ? `${OPENROUTER_BASE}/chat/completions` : `${config.providers[plan.provider]!.base_url.replace(/\/+$/, "")}/chat/completions`;
       const envName = keyEnv(config, plan.provider);
-      const response = await postChat(url, envName ? (process.env[envName] ?? null) : null, requestBody(config, plan, expertMessages(context, assigned)), input.fetchImpl ?? fetch, input.retryMs ?? 2000);
-      const usage = response.usage;
-      result.inputTokens = usage?.prompt_tokens ?? 0;
-      result.outputTokens = usage?.completion_tokens ?? 0;
-      result.costUsd =
-        typeof usage?.cost === "number"
-          ? usage.cost
-          : usage?.prompt_tokens !== undefined && usage.completion_tokens !== undefined
-            ? usage.prompt_tokens * plan.inputPerToken + usage.completion_tokens * plan.outputPerToken
-            : plan.worstCaseUsd;
-      const choice = response.choices?.[0];
-      if (choice?.finish_reason === "length") throw new Error("it ran out of output tokens. Raise max_output_tokens");
-      if (typeof choice?.message?.content !== "string") throw new Error("the response had no text");
-      output = parseJsonOutput(choice.message.content);
+      const parts = context.parts;
+      for (let i = 0; i < parts.length; i++) {
+        const messages = expertMessages(parts[i] as PanelPart, assigned, i, parts.length);
+        const response = await postChat(url, envName ? (process.env[envName] ?? null) : null, requestBody(config, plan, messages), input.fetchImpl ?? fetch, input.retryMs ?? 2000);
+        const usage = response.usage;
+        result.inputTokens += usage?.prompt_tokens ?? 0;
+        result.outputTokens += usage?.completion_tokens ?? 0;
+        result.costUsd +=
+          typeof usage?.cost === "number"
+            ? usage.cost
+            : usage?.prompt_tokens !== undefined && usage.completion_tokens !== undefined
+              ? usage.prompt_tokens * plan.inputPerToken + usage.completion_tokens * plan.outputPerToken
+              : (plan.partUsd[i] ?? plan.worstCaseUsd);
+        const choice = response.choices?.[0];
+        if (choice?.finish_reason === "length") throw new Error("it ran out of output tokens. Raise max_output_tokens");
+        if (typeof choice?.message?.content !== "string") throw new Error("the response had no text");
+        keep(parseJsonOutput(choice.message.content));
+      }
     }
-    const { kept, invalid } = cleanCandidates(output, plan.id, lensIds, scopeFiles, context.lines);
-    result.candidates = kept;
-    result.invalid = invalid;
   } catch (error) {
     result.status = "inconclusive";
     result.reason = (error instanceof Error ? error.message : String(error)).split("\n")[0];
@@ -779,7 +847,7 @@ export async function runPanel(input: RunPanelInput): Promise<PanelResult> {
   if (finished.length === 0) {
     throw new Error(`no panel expert finished, so there is no score. API cost so far: ${usd(costUsd)}. ${experts.map((e) => `${e.id}: ${e.reason}`).join("; ")}`);
   }
-  const candidates = mergeCandidates(finished.map((e) => e.candidates));
+  const candidates = mergeCandidates(finished.map((e) => e.candidates)).map((c, i) => ({ ...c, id: `C${i + 1}` }));
   const candidatesFile = join(dir, "candidates.json");
   writeFileSync(candidatesFile, `${JSON.stringify({ candidates }, null, 2)}\n`);
 
@@ -820,7 +888,7 @@ export function panelFindingsFile(r: PanelResult) {
     unreadFiles: [...r.unread, ...r.withheld],
     findings: r.candidates
       .filter((c) => c.severity !== "P3" || ++minor <= 5)
-      .map(({ foundBy, ...c }) => ({ ...c, body: `${c.body} (Found by: ${foundBy.join(", ")}.)`.trim() })),
+      .map(({ foundBy, id, ...c }) => ({ ...c, ...(id ? { from: [id] } : {}), body: `${c.body} (Found by: ${foundBy.join(", ")}.)`.trim() })),
   };
 }
 

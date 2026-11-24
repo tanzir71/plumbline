@@ -346,7 +346,7 @@ Label centers: api/invoices (220,27) · billing (100,139) · users/session (335,
     rules   AGENTS.md  ADR-012
             plumbline.yml
     ```
-  - `PASS 02` · `review` · `Review in parallel` · `Bug hunters trace real values while architecture lenses read the graph.`
+  - `PASS 02` · `review` · `Review in parallel` · `Reviewers read the riskiest files first, and a follow-up pass reads any they missed.`
     ```
     A  regressions     2
     B  regressions     1
@@ -354,7 +354,7 @@ Label centers: api/invoices (220,27) · billing (100,139) · users/session (335,
     D  hygiene, ops    1
        candidates      7
     ```
-  - `PASS 03` · `prove` · `Prove it or drop it` · `Every P0 and P1 needs a failing test, a graph diff or a broken rule.`
+  - `PASS 03` · `prove` · `Prove it or downgrade it` · `P0 and P1 need a failing test, a graph diff or a broken rule. Only the code can drop a candidate.`
     ```
     cycle     graph_diff  kept
     tenancy   test FAIL   kept
@@ -439,7 +439,7 @@ it("listAll() only returns the caller's org", async () => {
 - **Right:**
   - Eyebrow `06  PROOF, NOT OPINIONS`
   - H2 `No proof, no P1.`
-  - Lead: `Noise is why teams mute review bots. Plumbline raises a P0 or P1 only when it can show it: a failing test it wrote and ran in your own environment, a dependency graph diff, or the exact rule that broke. Anything else gets downgraded or dropped.`
+  - Lead: `Noise is why teams mute review bots. Plumbline raises a P0 or P1 only when it can show it: a failing test it wrote and ran in your own environment, a dependency graph diff, or the exact rule that broke. Anything else is shown at P2 or lower, and a candidate is dropped only when the code rules it out.`
 
 ### 07 Enterprise `26:252` (id `#enterprise`, bg surface)
 - Section head:

@@ -1,6 +1,6 @@
 {
   "name": "@tanziro/plumbline",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Plumbline CLI and MCP server: scope, import graph diff, contract checks and reports.",
   "license": "MIT",
   "type": "module",

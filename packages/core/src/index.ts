@@ -13,6 +13,7 @@ export * from "./scope.js";
 export * from "./run.js";
 export * from "./lenses.js";
 export * from "./pipeline.js";
+export * from "./triage.js";
 export * from "./env.js";
 export * from "./report/build.js";
 export * from "./report/markdown.js";

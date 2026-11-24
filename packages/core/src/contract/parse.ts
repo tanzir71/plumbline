@@ -133,6 +133,7 @@ function mergeContracts(parent: Contract, child: Contract, childKeys: Set<string
     layers: childKeys.has("layers") ? child.layers : parent.layers,
     rules: [...parent.rules.filter((r) => !childIds.has(r.id)), ...child.rules],
     proof: childKeys.has("proof") ? child.proof : parent.proof,
+    cycles: childKeys.has("cycles") ? child.cycles : parent.cycles,
     gate: childKeys.has("gate") ? child.gate : parent.gate,
     lanes: childKeys.has("lanes") ? child.lanes : parent.lanes,
     version: 1,

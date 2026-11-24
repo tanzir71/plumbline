@@ -41,6 +41,10 @@ export interface Finding {
   unreachable?: boolean;
   /** Reviewer judged the finding style-only. Without proof the finding is dropped. */
   styleOnly?: boolean;
+  /** Reviewer candidate ids this finding covers, such as `A3`. */
+  from?: string[];
+  /** The review could neither confirm nor rule it out. Shown at P2 at most. */
+  unresolved?: boolean;
 }
 
 export interface DroppedFinding {

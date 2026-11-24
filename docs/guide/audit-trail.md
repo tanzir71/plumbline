@@ -16,7 +16,7 @@ Each run is written to `.plumbline/run/<timestamp>/`.
 | `findings.json` | What the model reviewers returned, before the proof gate |
 | `proofs.json` | Test runs recorded by `plumbline prove` |
 
-The report records the score and verdict, each finding with its proof, findings that were downgraded or dropped and why, the model, the lenses that ran or were skipped, the gate result and the lane decision.
+The report records the score and verdict, each finding with its proof, findings that were downgraded, dropped or left unresolved and why, how reviewer candidates were handled, the files nobody read, the model, the lenses that ran or were skipped, the gate result and the lane decision.
 
 ## In CI
 

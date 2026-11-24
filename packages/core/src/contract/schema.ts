@@ -62,6 +62,7 @@ export const contractSchema = z.strictObject({
       P1: proofKinds.default([...DEFAULT_PROOF.P1]),
     })
     .prefault({}),
+  cycles: z.strictObject({ within_module: z.enum(["P1", "P2"]).default("P2") }).prefault({}),
   gate: z.array(gateEntry).default([]),
   lanes: z.strictObject({ light: lane.prefault({}) }).prefault({}),
 });

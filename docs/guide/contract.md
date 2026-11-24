@@ -29,6 +29,8 @@ rules:
 proof:
   P0: [failing_test, graph_diff]
   P1: [failing_test, graph_diff, broken_rule]
+cycles:
+  within_module: P2          # P1 | P2
 gate:
   - branches: ["main", "release/*"]
     min_merge_score: 3
@@ -51,6 +53,7 @@ Start with `plumbline init`, or let `/plumbline init` draft rules from your ADRs
 | `layers` | Top to bottom. A lower layer may not import a higher one. Skipping down is allowed |
 | `rules` | `forbid` rules are proved from the graph. `require` rules need a check |
 | `proof` | Which proof kinds count for P0 and P1 |
+| `cycles` | Severity of new cycles that stay inside one module. See [import cycles](./scoring.md#import-cycles) |
 | `gate` | Minimum merge score per base branch. See [gating](./gating.md) |
 | `lanes` | When a PR qualifies for light review. See [risk lanes](./lanes.md) |
 
@@ -76,7 +79,7 @@ rules:
     forbid: api -> db
 ```
 
-The child's `modules` and `rules` merge over the parent's. A rule with the same `id` replaces the parent's. `layers`, `proof`, `gate` and `lanes` replace the parent's when set.
+The child's `modules` and `rules` merge over the parent's. A rule with the same `id` replaces the parent's. `layers`, `proof`, `cycles`, `gate` and `lanes` replace the parent's when set.
 
 ## In CI, the base branch's contract applies
 

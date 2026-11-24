@@ -6,6 +6,7 @@
   "reviewerPasses": 48,
   "candidates": 64,
   "candidatesRejected": 5,
+  "candidatesRejectedUnclear": 3,
   "findings": 43,
   "p1": 17,
   "p2": 26,

@@ -8,6 +8,7 @@ import {
   applyRenames,
   canonicalCycle,
   checkContract,
+  computeScore,
   contractAt,
   deterministicFindings,
   diffGraphs,
@@ -145,6 +146,56 @@ describe("fixtures", () => {
     const found = deterministicFindings(diff, checkContract(head, contract), contract);
     expect(found.map((f) => f.id).sort()).toEqual(["dependency:a -> b", "dependency:a -> c"]);
     expect(found.find((f) => f.id === "dependency:a -> b")?.body).toContain("a/2.ts -> b/2.ts");
+  });
+
+  describe("cycle severity", () => {
+    const edge = (from: string, to: string) => ({ from, to, typeOnly: false });
+    const findingsFor = (yaml: string, baseEdges: [string, string][], addedEdges: [string, string][]) => {
+      const contract = parseContract(yaml);
+      const base = { files: [], edges: baseEdges.map(([from, to]) => edge(from, to)) };
+      const head = { files: [], edges: [...base.edges, ...addedEdges.map(([from, to]) => edge(from, to))] };
+      return deterministicFindings(diffGraphs(base, head, contract), checkContract(head, contract), contract);
+    };
+    const tangle: [string, string][][] = [
+      [["hub.ts", "a.ts"], ["hub.ts", "b.ts"], ["p.ts", "q.ts"]],
+      [["a.ts", "hub.ts"], ["b.ts", "hub.ts"], ["q.ts", "p.ts"]],
+    ];
+
+    it("groups connected cycles into one P2 finding when no module boundary is crossed", () => {
+      const found = findingsFor("version: 1\n", tangle[0] as [string, string][], tangle[1] as [string, string][]);
+      expect(found).toHaveLength(2);
+      expect(found.map((f) => f.severity)).toEqual(["P2", "P2"]);
+      const grouped = found.find((f) => f.title.includes("2 connected cycles"));
+      expect(grouped?.body).toContain("a.ts -> hub.ts");
+      expect(grouped?.body).toContain("b.ts -> hub.ts");
+      expect(computeScore({ findings: found }).value).toBe(4);
+    });
+
+    it("keeps in-module cycles at P1 when the contract asks for it, still grouped", () => {
+      const found = findingsFor("version: 1\ncycles:\n  within_module: P1\n", tangle[0] as [string, string][], tangle[1] as [string, string][]);
+      expect(found.map((f) => f.severity)).toEqual(["P1", "P1"]);
+      expect(computeScore({ findings: found }).value).toBe(3);
+    });
+
+    it("keeps a file cycle across declared modules at P1, even when the module loop already existed", () => {
+      const yaml = 'version: 1\nmodules:\n  a: ["a/**"]\n  b: ["b/**"]\n';
+      const found = findingsFor(yaml, [["a/1.ts", "b/1.ts"], ["b/2.ts", "a/2.ts"]], [["b/1.ts", "a/1.ts"]]);
+      expect(found).toHaveLength(1);
+      expect(found[0]?.severity).toBe("P1");
+    });
+
+    it("does not fold a rule-breaking cycle into a connected local cycle", () => {
+      const yaml = 'version: 1\nmodules:\n  a: ["a/**"]\n  b: ["b/**"]\nrules:\n  - id: no-b-to-a\n    forbid: b -> a\n';
+      const found = findingsFor(yaml, [["a/1.ts", "b/1.ts"], ["a/1.ts", "a/2.ts"]], [["b/1.ts", "a/1.ts"], ["a/2.ts", "a/1.ts"]]);
+      expect(found.map((f) => f.severity).sort()).toEqual(["P1", "P2"]);
+    });
+
+    it("does not group cycles from different modules through an unassigned file", () => {
+      const yaml = 'version: 1\nmodules:\n  a: ["a/**"]\n  b: ["b/**"]\n';
+      const found = findingsFor(yaml, [["a/1.ts", "lib.ts"], ["b/1.ts", "lib.ts"]], [["lib.ts", "a/1.ts"], ["lib.ts", "b/1.ts"]]);
+      expect(found).toHaveLength(2);
+      expect(found.map((f) => f.severity)).toEqual(["P2", "P2"]);
+    });
   });
 
   it("clean fixture reports nothing", async () => {

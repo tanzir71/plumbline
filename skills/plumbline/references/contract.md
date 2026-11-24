@@ -24,6 +24,8 @@ rules:
 proof:                       # which proof kinds count
   P0: [failing_test, graph_diff]
   P1: [failing_test, graph_diff, broken_rule]
+cycles:                      # new cycles inside one module: P2 (default) or P1
+  within_module: P2
 gate:                        # fail CI below a minimum score
   - branches: ["main", "release/*"]
     min_merge_score: 3
@@ -39,6 +41,7 @@ lanes:                       # a label only, never approval
 - A module can be in only one layer. Modules in the same layer may import each other, so use a `forbid` rule to keep two of them apart.
 - A layer may import any layer below it, not only the next one.
 - When a file matches several modules, the most specific glob wins.
+- A new cycle that crosses modules or breaks a rule is always P1. Connected cycles inside one module are one finding at `cycles.within_module`.
 
 To validate a draft without replacing the real contract:
 
